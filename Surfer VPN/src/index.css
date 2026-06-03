@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ===== Telegram theme bridge (populated at runtime by lib/telegram) ===== */
+    --tg-bg: #f3f8ff;
+    --tg-text: #0f2540;
+    --tg-hint: #6b7a93;
+    --tg-link: #0a84ff;
+    --tg-button: #1e90ff;
+    --tg-button-text: #ffffff;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  #root {
+    min-height: 100%;
+    min-height: 100dvh;
+  }
+
+  /* Respect users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
