@@ -13,6 +13,7 @@ import (
 
 func SetupServer(db *pgxpool.Pool, cfg config.Config) *gin.Engine {
 	r := gin.Default()
+	r.Use(middleware.CORS(cfg.CORSOrigins))
 
 	serversRepo := repository.NewVPNServersRepo(db)
 	serversUC := usecase.NewVPNServers(serversRepo)
@@ -26,7 +27,19 @@ func SetupServer(db *pgxpool.Pool, cfg config.Config) *gin.Engine {
 
 	usersRepo := repository.NewUsersRepo(db)
 	subsRepo := repository.NewSubscriptionsRepo(db)
-	usersUC := usecase.NewUserService(usersRepo, subsRepo, clientsUC, serversUC, xuiUC, cfg.DefaultVPNServer, cfg.DefaultMaxIPs)
+	trialsRepo := repository.NewTrialActivationsRepo(db)
+	refreshRepo := repository.NewAuthRefreshRepo(db)
+	authUC := usecase.NewAuthSession(usersRepo, refreshRepo, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	usersUC := usecase.NewUserService(usersRepo, subsRepo, trialsRepo, clientsUC, serversUC, xuiUC, cfg.DefaultVPNServer, cfg.DefaultMaxIPs)
+
+	authH := &handlers.AuthHandlers{
+		Auth:         authUC,
+		Users:        usersUC,
+		BotToken:     cfg.TelegramBotToken,
+		CookieDomain: cfg.CookieDomain,
+		CookieSecure: cfg.CookieSecure,
+		RefreshTTL:   cfg.JWTRefreshTTL,
+	}
 
 	h := &handlers.Handlers{
 		DB:        db,
@@ -36,22 +49,32 @@ func SetupServer(db *pgxpool.Pool, cfg config.Config) *gin.Engine {
 		Users:     usersUC,
 	}
 
-	RegisterRoutes(r, h, cfg)
+	RegisterRoutes(r, h, authH, authUC, cfg)
 
 	return r
 }
 
-func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, cfg config.Config) {
+func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, authH *handlers.AuthHandlers, authUC *usecase.AuthSession, cfg config.Config) {
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/ping", h.Ping)
 		v1.GET("/health", h.Health)
 	}
 
+	authGroup := v1.Group("/auth")
+	{
+		authGroup.POST("/session/webapp", authH.SessionTelegramWebApp)
+		authGroup.POST("/session/widget", authH.SessionTelegramWidget)
+		authGroup.POST("/refresh", authH.Refresh)
+		authGroup.POST("/logout", authH.Logout)
+	}
+
+	userAuth := middleware.UserAuth(cfg.InternalToken, cfg.TelegramBotToken, authUC)
 	user := v1.Group("/user")
-	user.Use(middleware.UserAuth(cfg.InternalToken, cfg.TelegramBotToken))
+	user.Use(userAuth)
 	{
 		user.GET("/me", h.UserMe)
+		user.POST("/trial/activate", h.UserTrialActivate)
 		user.POST("/subscription/mock-activate", h.UserMockActivate)
 		user.GET("/config", h.UserGetConfig)
 		user.POST("/config/refresh", h.UserRefreshConfig)

@@ -4,6 +4,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -11,6 +12,12 @@ type Config struct {
 	DatabaseDNS       string
 	InternalToken     string
 	TelegramBotToken  string
+	JWTSecret         string
+	JWTAccessTTL      time.Duration
+	JWTRefreshTTL     time.Duration
+	CORSOrigins       string
+	CookieDomain      string
+	CookieSecure      bool
 	DefaultVPNServer  string
 	DefaultMaxIPs     int
 	XUI               XUIConfig
@@ -50,6 +57,12 @@ func LoadConfig() Config {
 		DatabaseDNS:      mustEnv("DATABASE_URL"),
 		InternalToken:    mustEnv("INTERNAL_TOKEN"),
 		TelegramBotToken: mustEnv("TELEGRAM_BOT_TOKEN"),
+		JWTSecret:        mustEnv("JWT_SECRET"),
+		JWTAccessTTL:     durationEnv("JWT_ACCESS_TTL", 15*time.Minute),
+		JWTRefreshTTL:    durationEnv("JWT_REFRESH_TTL", 30*24*time.Hour),
+		CORSOrigins:      getEnv("CORS_ORIGINS", "http://localhost:5173,https://app.surfwave.space"),
+		CookieDomain:     getEnv("COOKIE_DOMAIN", ""),
+		CookieSecure:     getEnv("COOKIE_SECURE", "") == "1",
 		DefaultVPNServer: getEnv("DEFAULT_VPN_SERVER_ID", "default"),
 		DefaultMaxIPs:    maxIPs,
 		XUI: XUIConfig{
@@ -121,6 +134,20 @@ func mustEnv(key string) string {
 		panic(key + " is required")
 	}
 	return v
+}
+
+func durationEnv(key string, def time.Duration) time.Duration {
+	raw := strings.TrimSpace(os.Getenv(key))
+	if raw == "" {
+		return def
+	}
+	if d, err := time.ParseDuration(raw); err == nil {
+		return d
+	}
+	if n, err := strconv.Atoi(raw); err == nil && n > 0 {
+		return time.Duration(n) * time.Second
+	}
+	return def
 }
 
 func mustEnvInt64(key string) int64 {

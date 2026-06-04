@@ -158,6 +158,16 @@ WHERE c.is_active = true AND c.key_expires_at > $1;
 	return out, rows.Err()
 }
 
+func (r *VPNClientsRepo) DeactivateActiveByTelegramUserID(ctx context.Context, telegramUserID int64) error {
+	const q = `
+UPDATE vpn_clients
+SET is_active = false, updated_at = now()
+WHERE telegram_user_id = $1 AND is_active = true;
+`
+	_, err := r.db.Exec(ctx, q, telegramUserID)
+	return err
+}
+
 func (r *VPNClientsRepo) Deactivate(ctx context.Context, clientUUID uuid.UUID) error {
 	const q = `
 UPDATE vpn_clients

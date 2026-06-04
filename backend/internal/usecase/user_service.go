@@ -14,6 +14,16 @@ import (
 )
 
 var ErrInvalidPlan = errors.New("invalid plan")
+var ErrTrialAlreadyUsed = errors.New("trial already used")
+var ErrTrialActiveSubscription = errors.New("active subscription exists")
+
+const trialDuration = 24 * time.Hour
+const trialMaxIPs = 2
+
+type TrialActivationsRepo interface {
+	HasUsed(ctx context.Context, telegramID int64) (bool, error)
+	Record(ctx context.Context, telegramID int64) error
+}
 
 // PlanDays maps plan codes to duration in days.
 var PlanDays = map[string]int{
@@ -51,6 +61,7 @@ type UserProfile struct {
 type UserService struct {
 	users         UsersRepo
 	subs          SubscriptionsRepo
+	trials        TrialActivationsRepo
 	clients       *VPNClients
 	servers       *VPNServers
 	xui           *XUIAccess
@@ -62,6 +73,7 @@ type UserService struct {
 func NewUserService(
 	users UsersRepo,
 	subs SubscriptionsRepo,
+	trials TrialActivationsRepo,
 	clients *VPNClients,
 	servers *VPNServers,
 	xui *XUIAccess,
@@ -77,6 +89,7 @@ func NewUserService(
 	return &UserService{
 		users:         users,
 		subs:          subs,
+		trials:        trials,
 		clients:       clients,
 		servers:       servers,
 		xui:           xui,
@@ -118,6 +131,84 @@ func (s *UserService) GetProfile(ctx context.Context, telegramID int64) (UserPro
 	}
 
 	return out, nil
+}
+
+func (s *UserService) ActivateTrial(ctx context.Context, telegramID int64, profile model.UpsertUserParams) (UserProfile, error) {
+	used, err := s.trials.HasUsed(ctx, telegramID)
+	if err != nil {
+		return UserProfile{}, err
+	}
+	if used {
+		return UserProfile{}, ErrTrialAlreadyUsed
+	}
+	if _, err := s.clients.GetActiveByTelegramUserID(ctx, telegramID); err == nil {
+		return UserProfile{}, ErrTrialActiveSubscription
+	}
+	if !errors.Is(err, ErrNotFound) {
+		return UserProfile{}, err
+	}
+
+	profile.TelegramID = telegramID
+	if _, err := s.users.Upsert(ctx, profile); err != nil {
+		return UserProfile{}, err
+	}
+	if _, err := s.servers.GetActiveByID(ctx, s.defaultServer); err != nil {
+		return UserProfile{}, ErrInvalidServer
+	}
+
+	_ = s.clients.DeactivateActiveByTelegramUserID(ctx, telegramID)
+
+	now := s.now().UTC()
+	expires := now.Add(trialDuration)
+
+	note := telegramNote(profile)
+	uid, err := uuid.NewV4()
+	if err != nil {
+		return UserProfile{}, err
+	}
+	tgID := telegramID
+	client, err := s.clients.Create(ctx, model.CreateVPNClientParams{
+		ClientUUID:     uid,
+		ServerID:       s.defaultServer,
+		TelegramUserID: &tgID,
+		MaxIPs:         trialMaxIPs,
+		KeyExpiresAt:   expires,
+		Note:           &note,
+	})
+	if err != nil {
+		return UserProfile{}, err
+	}
+
+	if s.xui == nil {
+		return UserProfile{}, fmt.Errorf("xui access not configured")
+	}
+	access, err := s.xui.Provision(ctx, client.ClientUUID)
+	if err != nil {
+		return UserProfile{}, err
+	}
+
+	if err := s.trials.Record(ctx, telegramID); err != nil {
+		return UserProfile{}, err
+	}
+
+	_ = s.subs.DeactivateActiveForUser(ctx, telegramID)
+	uuidStr := client.ClientUUID.String()
+	_, err = s.subs.Create(ctx, model.CreateSubscriptionParams{
+		TelegramUserID: telegramID,
+		PlanCode:       "trial",
+		PlanLabel:      "Бесплатно 24 часа",
+		StartsAt:       now,
+		EndsAt:         client.KeyExpiresAt,
+		ClientUUID:     &uuidStr,
+		IsMock:         true,
+	})
+	if err != nil {
+		return UserProfile{}, err
+	}
+
+	u, _ := s.users.GetByTelegramID(ctx, telegramID)
+	sub, _ := s.subs.GetActiveForUser(ctx, telegramID, s.now())
+	return UserProfile{User: u, Subscription: &sub, Client: &client, Access: &access}, nil
 }
 
 func (s *UserService) MockActivate(ctx context.Context, telegramID int64, planCode string, profile model.UpsertUserParams) (UserProfile, error) {

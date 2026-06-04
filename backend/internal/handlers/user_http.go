@@ -140,6 +140,30 @@ func (h *Handlers) UserMe(c *gin.Context) {
 	c.JSON(http.StatusOK, toUserMeResponse(prof))
 }
 
+func (h *Handlers) UserTrialActivate(c *gin.Context) {
+	tg, ok := middleware.GetTelegram(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	prof, err := h.Users.ActivateTrial(c.Request.Context(), tg.ID, profileFromTelegram(tg))
+	if err != nil {
+		switch {
+		case errors.Is(err, usecase.ErrTrialAlreadyUsed):
+			c.JSON(http.StatusConflict, gin.H{"error": "trial already used"})
+		case errors.Is(err, usecase.ErrTrialActiveSubscription):
+			c.JSON(http.StatusConflict, gin.H{"error": "active subscription exists"})
+		case errors.Is(err, usecase.ErrInvalidServer):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "vpn server not configured"})
+		default:
+			log.Printf("trial activate failed: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, toUserMeResponse(prof))
+}
+
 func (h *Handlers) UserMockActivate(c *gin.Context) {
 	tg, ok := middleware.GetTelegram(c)
 	if !ok {
