@@ -1,9 +1,11 @@
 import type { User } from "@/types";
 import { MOCK_USER, daysUntil } from "@/lib/mock-data";
+import { getAccessToken } from "@/lib/auth-store";
+import { isTelegramMiniApp } from "@/lib/runtime";
 import { getTelegramUser, getWebApp } from "@/lib/telegram";
 
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://api.surfervpn.local";
+  import.meta.env.VITE_API_BASE_URL ?? "";
 
 const USE_MOCK =
   import.meta.env.VITE_USE_MOCK === "true" ||
@@ -31,23 +33,59 @@ type ApiUserMe = {
   };
 };
 
-function authHeaders(): HeadersInit {
-  const initData = getWebApp()?.initData;
-  if (initData) {
-    return { Authorization: `tma ${initData}` };
+function buildAuthHeaders(): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (isTelegramMiniApp()) {
+    const initData = getWebApp()?.initData;
+    if (initData) {
+      headers.Authorization = `tma ${initData}`;
+    }
+  } else {
+    const token = getAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
   }
-  return {};
+  return headers;
 }
 
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      ...init?.headers,
-    },
-  });
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshAccess(): Promise<boolean> {
+  if (isTelegramMiniApp()) return false;
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const { refreshSession } = await import("@/lib/auth-api");
+      const t = await refreshSession();
+      return t !== null;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const base = API_BASE_URL || "";
+  const doFetch = () =>
+    fetch(`${base}${path}`, {
+      ...init,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...buildAuthHeaders(),
+        ...init?.headers,
+      },
+    });
+
+  let res = await doFetch();
+  if (res.status === 401 && !isTelegramMiniApp()) {
+    const ok = await tryRefreshAccess();
+    if (ok) {
+      res = await doFetch();
+    }
+  }
+
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg =
@@ -92,7 +130,7 @@ function mapApiUser(data: ApiUserMe): User {
 }
 
 export async function getCurrentUser(): Promise<User> {
-  if (USE_MOCK || !getWebApp()?.initData) {
+  if (USE_MOCK) {
     const tg = getTelegramUser();
     const base = MOCK_USER;
     return {
@@ -114,16 +152,15 @@ export async function getCurrentUser(): Promise<User> {
 }
 
 export async function getVpnKey(): Promise<string> {
-  if (USE_MOCK || !getWebApp()?.initData) {
-    const user = await getCurrentUser();
-    return user.vpnKey;
+  if (USE_MOCK) {
+    return (await getCurrentUser()).vpnKey;
   }
   const data = await apiFetch<{ vlessUri: string }>("/api/v1/user/config");
   return data.vlessUri;
 }
 
 export async function refreshVpnKey(): Promise<string> {
-  if (USE_MOCK || !getWebApp()?.initData) {
+  if (USE_MOCK) {
     return getVpnKey();
   }
   const data = await apiFetch<{ vlessUri: string }>("/api/v1/user/config/refresh", {

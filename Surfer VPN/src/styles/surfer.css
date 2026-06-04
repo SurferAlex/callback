@@ -222,3 +222,20 @@ body{
 .splash-loader span:nth-child(2){animation-delay:.16s;background:#1aa6ea}
 .splash-loader span:nth-child(3){animation-delay:.32s;background:var(--cyan)}
 @keyframes splashDot{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(-7px);opacity:1}}
+
+/* ───────── login / auth ───────── */
+.auth-loading{display:flex;align-items:center;justify-content:center;background:#fff}
+.auth-loading-inner{font-weight:700;font-size:18px;color:var(--teal)}
+.login-screen{background:linear-gradient(160deg,#eef6fb 0%,#e3eef6 100%)}
+.login-screen .page{padding-top:120px;padding-bottom:40px}
+.login-card{text-align:center}
+.login-title{margin:0 0 12px;font-size:26px;font-weight:800;color:var(--ink)}
+.login-sub{margin:0 0 10px;font-size:15px;color:var(--ink-2);line-height:1.5}
+.login-hint{margin:0 0 24px;font-size:13px;color:var(--muted);line-height:1.45}
+.login-widget{display:flex;justify-content:center;min-height:48px}
+.login-error{font-size:13px;color:#b91c1c}
+.tg-iconbtn-spacer{width:34px;height:34px;display:inline-block}
+.tg-logout{
+  border:none;background:rgba(255,255,255,.55);backdrop-filter:blur(10px);
+  border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;
+}
