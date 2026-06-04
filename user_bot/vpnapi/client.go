@@ -140,3 +140,25 @@ func decodeJSON[T any](resp *http.Response) (T, error) {
 func IsNoSubscription(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "no active subscription")
 }
+
+func IsTrialAlreadyUsed(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "trial already used")
+}
+
+func IsTrialActiveSubscription(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "active subscription exists")
+}
+
+func (c *Client) ActivateTrial(ctx context.Context, userID int64, first, last, username string) (UserMe, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.base+"/api/v1/user/trial/activate", nil)
+	if err != nil {
+		return UserMe{}, err
+	}
+	c.setUserHeaders(req, userID, first, last, username)
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return UserMe{}, err
+	}
+	defer resp.Body.Close()
+	return decodeJSON[UserMe](resp)
+}

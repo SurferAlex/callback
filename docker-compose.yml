@@ -26,8 +26,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-    expose:
-      - "8080"
+    ports:
+      - "8080:8080"
     restart: unless-stopped
 
   user_bot:
@@ -46,13 +46,15 @@ services:
     build:
       context: ./Surfer VPN
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: https://api.surfwave.space
     restart: unless-stopped
-    expose:
-      - "80"
+    ports:
+      - "3000:80"
 
   nginx:
     image: nginx:1.27-alpine
-    container_name: vpnplatform-nginx
+    container_name: surfvpn-nginx
     depends_on:
       - vpnapi
       - miniapp

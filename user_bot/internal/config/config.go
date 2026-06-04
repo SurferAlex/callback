@@ -7,12 +7,15 @@ import (
 )
 
 type Config struct {
-	TelegramBotToken   string
-	VPNAPIBaseURL      string
+	TelegramBotToken    string
+	VPNAPIBaseURL       string
 	VPNAPIInternalToken string
-	MiniAppURL         string
-	SupportContact     string
-	SupportTelegramURL string
+	MiniAppURL          string
+	SupportContact      string
+	SupportTelegramURL  string
+	WelcomeStickerID    string
+	SuccessStickerID    string
+	ErrorStickerID      string
 }
 
 func Load() (Config, error) {
@@ -23,6 +26,9 @@ func Load() (Config, error) {
 		MiniAppURL:          strings.TrimSpace(os.Getenv("MINI_APP_URL")),
 		SupportContact:      strings.TrimSpace(os.Getenv("SUPPORT_CONTACT")),
 		SupportTelegramURL:  strings.TrimSpace(os.Getenv("SUPPORT_TELEGRAM_URL")),
+		WelcomeStickerID:    strings.TrimSpace(os.Getenv("WELCOME_STICKER_ID")),
+		SuccessStickerID:    strings.TrimSpace(os.Getenv("SUCCESS_STICKER_ID")),
+		ErrorStickerID:      strings.TrimSpace(os.Getenv("ERROR_STICKER_ID")),
 	}
 	if cfg.TelegramBotToken == "" {
 		return Config{}, fmt.Errorf("TELEGRAM_BOT_TOKEN is required")

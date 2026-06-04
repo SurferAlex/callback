@@ -24,6 +24,7 @@ type VPNClientsRepo interface {
 	GetLatestByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error)
 	Create(ctx context.Context, p model.CreateVPNClientParams) (model.VPNClient, error)
 	Deactivate(ctx context.Context, id uuid.UUID) error
+	DeactivateActiveByTelegramUserID(ctx context.Context, telegramUserID int64) error
 	ExtendKeyExpiresAt(ctx context.Context, id uuid.UUID, addDays int, now time.Time) (model.VPNClient, error)
 	UpdateMaxIPs(ctx context.Context, id uuid.UUID, maxIPs int) (model.VPNClient, error)
 	ListActiveByNote(ctx context.Context, note string) ([]model.VPNClient, error)
@@ -64,6 +65,10 @@ func (uc *VPNClients) Create(ctx context.Context, p model.CreateVPNClientParams)
 }
 func (uc *VPNClients) Deactivate(ctx context.Context, id uuid.UUID) error {
 	return uc.repo.Deactivate(ctx, id)
+}
+
+func (uc *VPNClients) DeactivateActiveByTelegramUserID(ctx context.Context, telegramUserID int64) error {
+	return uc.repo.DeactivateActiveByTelegramUserID(ctx, telegramUserID)
 }
 
 func (uc *VPNClients) Extend(ctx context.Context, id uuid.UUID, addDays int) (model.VPNClient, error) {
