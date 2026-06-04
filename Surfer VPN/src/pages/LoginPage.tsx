@@ -1,0 +1,78 @@
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { Waves } from "@/components/surf/Waves";
+import { useAuth } from "@/contexts/AuthContext";
+import { sessionFromTelegramWidget } from "@/lib/auth-api";
+
+const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? "";
+
+declare global {
+  interface Window {
+    onTelegramAuth?: (user: Record<string, unknown>) => void;
+  }
+}
+
+export function LoginPage() {
+  const navigate = useNavigate();
+  const { authenticated, bootstrap } = useAuth();
+  const widgetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (authenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [authenticated, navigate]);
+
+  useEffect(() => {
+    if (!BOT_USERNAME || !widgetRef.current) return;
+
+    window.onTelegramAuth = async (user) => {
+      try {
+        await sessionFromTelegramWidget(user);
+        await bootstrap();
+        navigate("/", { replace: true });
+      } catch {
+        /* widget login failed */
+      }
+    };
+
+    widgetRef.current.innerHTML = "";
+    const script = document.createElement("script");
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.async = true;
+    script.setAttribute("data-telegram-login", BOT_USERNAME);
+    script.setAttribute("data-size", "large");
+    script.setAttribute("data-radius", "12");
+    script.setAttribute("data-onauth", "onTelegramAuth(user)");
+    script.setAttribute("data-request-access", "write");
+    widgetRef.current.appendChild(script);
+
+    return () => {
+      delete window.onTelegramAuth;
+    };
+  }, [bootstrap, navigate]);
+
+  return (
+    <div className="screen login-screen">
+      <Waves />
+      <main className="login-card page">
+        <h1 className="login-title">🏄 Surf VPN</h1>
+        <p className="login-sub">
+          Войдите через Telegram, чтобы открыть личный кабинет в браузере.
+        </p>
+        <p className="login-hint">
+          После первого входа в Mini App сессия сохранится — повторный вход не
+          понадобится.
+        </p>
+        {BOT_USERNAME ? (
+          <div ref={widgetRef} className="login-widget" />
+        ) : (
+          <p className="login-error">
+            Укажите VITE_TELEGRAM_BOT_USERNAME в настройках сборки.
+          </p>
+        )}
+      </main>
+    </div>
+  );
+}

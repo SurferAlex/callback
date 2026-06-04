@@ -24,8 +24,13 @@ npm run preview  # предпросмотр прод-сборки
 npm run lint     # tsc --noEmit
 ```
 
-Открыть в Telegram: захостить `dist/` (статик-хостинг с HTTPS) и указать URL в
-@BotFather → Bot Settings → Menu Button / Web App.
+Открыть в Telegram / браузер:
+
+- **Production**: https://app.surfwave.space (статика на `:3000` за Nginx)
+- **API**: https://api.surfwave.space — задать в сборке `VITE_API_BASE_URL` (см. `.env.production`)
+- **Локально**: `VITE_API_BASE_URL` пустой, `npm run dev` проксирует `/api` → `:8080`
+
+@BotFather: Web App URL → `https://app.surfwave.space`, Login Widget domain → `app.surfwave.space`.
 
 ## Структура
 

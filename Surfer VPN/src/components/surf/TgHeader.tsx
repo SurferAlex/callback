@@ -1,18 +1,44 @@
 import { Ic } from "@/components/surf/icons";
+import { useAuth } from "@/contexts/AuthContext";
+import { isTelegramMiniApp } from "@/lib/runtime";
+import { getWebApp } from "@/lib/telegram";
 
 export function TgHeader() {
+  const { mode, logout } = useAuth();
+  const inTg = isTelegramMiniApp();
+  const sub = inTg ? "mini app" : "web cabinet";
+
   return (
     <div className="tg-header">
-      <button className="tg-iconbtn" aria-label="Закрыть">
-        <Ic.Close />
-      </button>
+      {inTg ? (
+        <button
+          type="button"
+          className="tg-iconbtn"
+          aria-label="Закрыть"
+          onClick={() => getWebApp()?.close()}
+        >
+          <Ic.Close />
+        </button>
+      ) : (
+        <span className="tg-iconbtn tg-iconbtn-spacer" />
+      )}
       <div className="tg-title">
         <span className="tg-title-main">Surfer VPN</span>
-        <span className="tg-title-sub">mini app</span>
+        <span className="tg-title-sub">{sub}</span>
       </div>
-      <button className="tg-iconbtn" aria-label="Меню">
-        <Ic.Dots />
-      </button>
+      {mode === "web" ? (
+        <button
+          type="button"
+          className="tg-logout"
+          onClick={() => void logout()}
+        >
+          Выйти
+        </button>
+      ) : (
+        <button type="button" className="tg-iconbtn" aria-label="Меню">
+          <Ic.Dots />
+        </button>
+      )}
     </div>
   );
 }

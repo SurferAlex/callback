@@ -5,20 +5,41 @@
   --line:rgba(20,70,120,.10);
   --card-sh:0 8px 24px rgba(19,86,150,.10), 0 2px 6px rgba(19,86,150,.06);
   --font:'Plus Jakarta Sans', -apple-system, system-ui, sans-serif;
+  --cabinet-bg:url('/images/cabinet-bg.webp');
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
+html,body,#root{
+  min-height:100dvh;
+  background-color:#e5f3fa;
+  background-image:var(--cabinet-bg);
+  background-repeat:no-repeat;
+  background-position:center center;
+  background-size:cover;
+  background-attachment:fixed;
+}
 body{
   font-family:var(--font);
-  background:
-    radial-gradient(1200px 700px at 70% -10%, #eaf7fe 0%, transparent 60%),
-    linear-gradient(160deg,#eef6fb 0%,#e3eef6 100%);
-  min-height:100dvh;-webkit-font-smoothing:antialiased;
+  -webkit-font-smoothing:antialiased;
 }
 
 /* ───────── screen shell ───────── */
-.screen{width:100%;max-width:440px;margin:0 auto;min-height:100dvh;position:relative;background:#fff;color:var(--ink);box-shadow:0 30px 60px rgba(20,70,120,.14)}
-@media (max-width:440px){.screen{max-width:none;box-shadow:none}}
+.screen{
+  width:100%;max-width:440px;margin:0 auto;min-height:100dvh;position:relative;
+  color:var(--ink);
+  background:transparent;
+}
+@media (min-width:441px){
+  .screen{
+    margin:16px auto;
+    min-height:calc(100dvh - 32px);
+    background:rgba(255,255,255,.94);
+    border-radius:24px;
+    box-shadow:0 24px 56px rgba(20,70,120,.18), 0 0 0 1px rgba(255,255,255,.6);
+    overflow:hidden;
+  }
+}
+@media (max-width:440px){.screen{max-width:none}}
 .scroll{min-height:100dvh;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
 .scroll::-webkit-scrollbar{width:0}
 
@@ -42,7 +63,10 @@ body{
 /* ───────── Hero ───────── */
 .hero{
   position:relative;padding:104px 22px 0;overflow:hidden;min-height:352px;
-  background:linear-gradient(180deg,#dcf0fc 0%,#e9f5fd 46%,#ffffff 100%);
+  background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.55) 52%,rgba(255,255,255,.92) 100%);
+}
+@media (min-width:441px){
+  .hero{background:linear-gradient(180deg,rgba(255,255,255,.08) 0%,rgba(255,255,255,.35) 55%,rgba(255,255,255,.88) 100%)}
 }
 /* surfer illustration — featured right, edge-feathered, bottom fades to white */
 .hero-art{
@@ -222,3 +246,27 @@ body{
 .splash-loader span:nth-child(2){animation-delay:.16s;background:#1aa6ea}
 .splash-loader span:nth-child(3){animation-delay:.32s;background:var(--cyan)}
 @keyframes splashDot{0%,100%{transform:translateY(0);opacity:.45}50%{transform:translateY(-7px);opacity:1}}
+
+/* ───────── login / auth ───────── */
+.auth-loading{display:flex;align-items:center;justify-content:center;background:transparent}
+.auth-loading-inner{font-weight:700;font-size:18px;color:var(--teal);text-shadow:0 1px 8px rgba(255,255,255,.9)}
+.login-screen{background:transparent}
+.login-screen .page{padding-top:120px;padding-bottom:40px}
+.login-card{
+  text-align:center;
+  margin:0 16px;
+  padding:28px 22px 32px;
+  background:rgba(255,255,255,.94);
+  border-radius:24px;
+  box-shadow:var(--card-sh);
+}
+.login-title{margin:0 0 12px;font-size:26px;font-weight:800;color:var(--ink)}
+.login-sub{margin:0 0 10px;font-size:15px;color:var(--ink-2);line-height:1.5}
+.login-hint{margin:0 0 24px;font-size:13px;color:var(--muted);line-height:1.45}
+.login-widget{display:flex;justify-content:center;min-height:48px}
+.login-error{font-size:13px;color:#b91c1c}
+.tg-iconbtn-spacer{width:34px;height:34px;display:inline-block}
+.tg-logout{
+  border:none;background:rgba(255,255,255,.55);backdrop-filter:blur(10px);
+  border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;
+}
