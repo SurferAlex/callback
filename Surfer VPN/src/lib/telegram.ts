@@ -31,8 +31,8 @@ export function initTelegram(): void {
     wa.ready();
     wa.expand();
     // Light ocean header to blend with the hero gradient.
-    wa.setHeaderColor?.("#e0f2fe");
-    wa.setBackgroundColor?.("#f0f9ff");
+    wa.setHeaderColor?.("#e5f3fa");
+    wa.setBackgroundColor?.("#e5f3fa");
   } catch {
     /* defensive: older clients may lack some setters */
   }
