@@ -94,11 +94,8 @@ func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, authH *handlers.AuthHan
 		protected.POST("/clients/:uuid/max-ips", h.UpdateClientMaxIPs)
 	}
 
-	// Bot/admin: internal token + telegram headers (trial, mock subscription).
-	internalUser := v1.Group("/user")
-	internalUser.Use(middleware.InternalUserAuth(cfg.InternalToken))
-	{
-		internalUser.POST("/trial/activate", h.UserTrialActivate)
-		internalUser.POST("/subscription/mock-activate", h.UserMockActivate)
-	}
+	// Bot/admin: internal token only (no UserAuth JWT/tma) — same paths, separate middleware chain.
+	internalAuth := middleware.InternalUserAuth(cfg.InternalToken)
+	v1.POST("/user/trial/activate", internalAuth, h.UserTrialActivate)
+	v1.POST("/user/subscription/mock-activate", internalAuth, h.UserMockActivate)
 }

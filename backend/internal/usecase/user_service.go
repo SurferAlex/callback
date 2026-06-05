@@ -141,11 +141,13 @@ func (s *UserService) ActivateTrial(ctx context.Context, telegramID int64, profi
 	if used {
 		return UserProfile{}, ErrTrialAlreadyUsed
 	}
-	if _, err := s.clients.GetActiveByTelegramUserID(ctx, telegramID); err == nil {
+	// Use activeErr, not err: err still holds HasUsed result (often nil) and must not be reused here.
+	_, activeErr := s.clients.GetActiveByTelegramUserID(ctx, telegramID)
+	if activeErr == nil {
 		return UserProfile{}, ErrTrialActiveSubscription
 	}
-	if !errors.Is(err, ErrNotFound) {
-		return UserProfile{}, err
+	if !errors.Is(activeErr, ErrNotFound) {
+		return UserProfile{}, activeErr
 	}
 
 	profile.TelegramID = telegramID
