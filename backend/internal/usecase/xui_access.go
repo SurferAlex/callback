@@ -4,6 +4,7 @@ import (
 	"api-vpn/internal/model"
 	"api-vpn/internal/xui"
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -108,6 +109,37 @@ func makeXUIEmail(displayName string, uuidStr string) string {
 		out = out[:64]
 	}
 	return out
+}
+
+// RemoveFromPanel deletes the client in 3x-ui and drops local xui_access (best-effort on missing rows).
+func (uc *XUIAccess) RemoveFromPanel(ctx context.Context, client model.VPNClient) error {
+	sx, err := uc.registry.forServer(ctx, client.ServerID)
+	if err != nil {
+		return err
+	}
+
+	inboundID := sx.inbound
+	email := ""
+	if a, err := uc.repo.GetByClientUUID(ctx, client.ClientUUID); err == nil {
+		email = a.XUIClientEmail
+		inboundID = a.InboundID
+	} else if !errors.Is(err, ErrNotFound) {
+		return err
+	} else {
+		displayName := client.ClientUUID.String()
+		if client.Note != nil {
+			if n := strings.TrimSpace(*client.Note); n != "" {
+				displayName = n
+			}
+		}
+		email = makeXUIEmail(displayName, client.ClientUUID.String())
+	}
+
+	if err := sx.client.DeleteClientByEmail(ctx, inboundID, email); err != nil {
+		return err
+	}
+	_ = uc.repo.DeleteByClientUUID(ctx, client.ClientUUID)
+	return nil
 }
 
 func (uc *XUIAccess) Revoke(ctx context.Context, clientUUID uuid.UUID) error {

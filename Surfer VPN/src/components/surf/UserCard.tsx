@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { SubscriptionStatus, User } from "@/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, pluralize } from "@/lib/utils";
 import { Ic } from "@/components/surf/icons";
 
 interface StatusPillProps {
@@ -63,7 +63,7 @@ export function UserCard({ user }: UserCardProps) {
       <div className="days-banner">
         <div className="days-num">{left}</div>
         <div className="days-text">
-          <div>дней до окончания</div>
+          <div>{pluralize(left, ["день", "дня", "дней"])} до окончания</div>
           <div className="days-bar">
             <span style={{ width: Math.min(100, (left / 90) * 100) + "%" }}></span>
           </div>

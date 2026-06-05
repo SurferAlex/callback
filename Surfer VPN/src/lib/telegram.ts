@@ -91,9 +91,15 @@ export function openLink(url: string): void {
   const wa = getWebApp();
   if (wa) {
     wa.openLink(url);
-  } else if (typeof window !== "undefined") {
-    window.open(url, "_blank", "noopener,noreferrer");
+    return;
   }
+  if (typeof window === "undefined") return;
+  // Custom schemes (happ://) must use location, not window.open.
+  if (url.startsWith("happ://")) {
+    window.location.href = url;
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 /** Fire light haptic feedback (no-op outside Telegram). */

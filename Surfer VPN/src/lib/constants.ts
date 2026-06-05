@@ -7,13 +7,16 @@ export const BRAND = {
   subtitle: "Быстрый и безопасный интернет для тебя",
 } as const;
 
-/** Base URL for the subscription deep-link (Happ client). */
+/** Base URL for subscription pages (optional web fallback). */
 export const SUB_BASE_URL =
   import.meta.env.VITE_SUB_BASE_URL ?? "https://sub.surfervpn.com";
 
-/** Build the "Open Happ" deep link for a given VPN key. */
+/** Build Happ deep link: happ://add/vless://… (see 3x-ui / Happ docs). */
 export function buildHappUrl(vpnKey: string): string {
-  return `${SUB_BASE_URL}/open?key=${encodeURIComponent(vpnKey)}`;
+  const key = vpnKey.trim();
+  if (!key) return "";
+  if (key.startsWith("happ://")) return key;
+  return `happ://add/${key}`;
 }
 
 /** Install grid data — mock links for now. */
