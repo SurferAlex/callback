@@ -166,25 +166,56 @@ type inboundSettings struct {
 	Clients []xrayClient `json:"clients"`
 }
 
-// GetClientExpiryTime returns expiryTime (unix ms) for a client UUID in the inbound settings.
-func (c *Client) GetClientExpiryTime(ctx context.Context, inboundID int64, clientUUID string) (int64, error) {
+func normalizeClientUUID(s string) string {
+	return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(s), "-", ""))
+}
+
+func clientUUIDMatches(a, b string) bool {
+	if a == "" || b == "" {
+		return false
+	}
+	return normalizeClientUUID(a) == normalizeClientUUID(b)
+}
+
+// ExpiryTimeFromXUI converts 3x-ui expiryTime (unix seconds or milliseconds) to time.Time.
+func ExpiryTimeFromXUI(raw int64) time.Time {
+	if raw <= 0 {
+		return time.Time{}
+	}
+	// Values below 1e12 are unix seconds (year 2001+ is ~1e9; year 33658 in seconds is ~1e12).
+	if raw < 1_000_000_000_000 {
+		return time.Unix(raw, 0).UTC()
+	}
+	return time.UnixMilli(raw).UTC()
+}
+
+// FindClientExpiry reads expiry from inbound settings by client UUID and/or email.
+func (c *Client) FindClientExpiry(ctx context.Context, inboundID int64, clientUUID, email string) (time.Time, error) {
 	var resp apiResponse[inboundObj]
 	if err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/panel/api/inbounds/get/%d", inboundID), nil, &resp); err != nil {
-		return 0, err
+		return time.Time{}, err
 	}
 	if !resp.Success {
-		return 0, fmt.Errorf("xui get inbound: %s", resp.Msg)
+		return time.Time{}, fmt.Errorf("xui get inbound: %s", resp.Msg)
 	}
 	var st inboundSettings
 	if err := json.Unmarshal([]byte(resp.Obj.Settings), &st); err != nil {
-		return 0, fmt.Errorf("parse inbound settings: %w", err)
+		return time.Time{}, fmt.Errorf("parse inbound settings: %w", err)
 	}
+	email = strings.TrimSpace(email)
 	for _, cl := range st.Clients {
-		if cl.ID == clientUUID {
-			return cl.ExpiryTime, nil
+		if clientUUID != "" && clientUUIDMatches(cl.ID, clientUUID) {
+			return ExpiryTimeFromXUI(cl.ExpiryTime), nil
 		}
 	}
-	return 0, fmt.Errorf("xui client %s not found", clientUUID)
+	if email != "" {
+		for _, cl := range st.Clients {
+			if strings.EqualFold(strings.TrimSpace(cl.Email), email) {
+				return ExpiryTimeFromXUI(cl.ExpiryTime), nil
+			}
+		}
+	}
+	return time.Time{}, fmt.Errorf("xui client not found (uuid=%s email=%s)", clientUUID, email)
 }
 
 func (c *Client) GetInbound(ctx context.Context, inboundID int64) (inboundObj, streamSettings, error) {

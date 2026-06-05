@@ -20,6 +20,7 @@ interface ToastState {
 export function HomePage() {
   const { user, loading: dataLoading, error: userError, refetch } = useUser();
   const [vpnKeyOverride, setVpnKeyOverride] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [toast, setToast] = useState<ToastState>({ show: false, msg: "" });
   // Splash stays up until BOTH the 2.1s timer fired AND the data resolved.
@@ -84,14 +85,23 @@ export function HomePage() {
               onHappCopied={() =>
                 fireToast("Ключ скопирован — откройте Happ и вставьте из буфера")
               }
+              refreshing={refreshing}
               onRefresh={async () => {
+                if (refreshing) return;
+                setRefreshing(true);
                 try {
                   const key = await refreshVpnKey();
                   setVpnKeyOverride(key);
                   refetch();
                   fireToast("Конфиг обновлён");
-                } catch {
-                  fireToast("Не удалось обновить конфиг");
+                } catch (err) {
+                  const msg =
+                    err instanceof Error && err.message
+                      ? err.message
+                      : "Не удалось обновить конфиг";
+                  fireToast(msg);
+                } finally {
+                  setRefreshing(false);
                 }
               }}
             />

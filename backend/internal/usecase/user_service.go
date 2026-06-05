@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -143,6 +144,7 @@ func (s *UserService) syncClientExpiryFromPanel(ctx context.Context, telegramID 
 	}
 	panelExpiry, err := s.xui.PanelExpiry(ctx, client)
 	if err != nil {
+		log.Printf("[panel-sync] telegram_id=%d uuid=%s err=%v", telegramID, client.ClientUUID, err)
 		return client
 	}
 	if panelExpiry.Sub(client.KeyExpiresAt.UTC()).Abs() < time.Minute {
@@ -359,12 +361,26 @@ func (s *UserService) activeClientFromPanel(ctx context.Context, telegramID int6
 }
 
 func (s *UserService) RefreshConfig(ctx context.Context, telegramID int64) (model.XUIAccess, error) {
-	client, err := s.activeClientFromPanel(ctx, telegramID)
+	client, err := s.clients.GetActiveRecordByTelegramUserID(ctx, telegramID)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
 	if s.xui == nil {
 		return model.XUIAccess{}, fmt.Errorf("xui access not configured")
+	}
+
+	// Read panel expiry before deleting the client — DB alone may still hold the original trial date.
+	expiryAt := client.KeyExpiresAt.UTC()
+	if panelExpiry, perr := s.xui.PanelExpiry(ctx, client); perr == nil {
+		expiryAt = panelExpiry.UTC()
+		if updated, uerr := s.clients.SetKeyExpiresAt(ctx, client.ClientUUID, expiryAt); uerr == nil {
+			client = updated
+		}
+	} else {
+		log.Printf("[config/refresh] panel expiry read failed telegram_id=%d uuid=%s err=%v", telegramID, client.ClientUUID, perr)
+	}
+	if !expiryAt.After(s.now()) {
+		return model.XUIAccess{}, ErrExpired
 	}
 
 	if err := s.xui.RemoveFromPanel(ctx, client); err != nil {
@@ -384,7 +400,7 @@ func (s *UserService) RefreshConfig(ctx context.Context, telegramID int64) (mode
 		ServerID:       client.ServerID,
 		TelegramUserID: &tgID,
 		MaxIPs:         client.MaxIPs,
-		KeyExpiresAt:   client.KeyExpiresAt,
+		KeyExpiresAt:   expiryAt,
 		Note:           client.Note,
 	})
 	if err != nil {

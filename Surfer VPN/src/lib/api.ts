@@ -1,6 +1,6 @@
 import type { User } from "@/types";
 import { MOCK_USER, daysUntil } from "@/lib/mock-data";
-import { getAccessToken } from "@/lib/auth-store";
+import { clearAccessToken, getAccessToken } from "@/lib/auth-store";
 import { isTelegramMiniApp } from "@/lib/runtime";
 import { getTelegramUser, getWebApp } from "@/lib/telegram";
 
@@ -33,18 +33,18 @@ type ApiUserMe = {
   };
 };
 
-function buildAuthHeaders(): HeadersInit {
+function buildAuthHeaders(forceTma = false): HeadersInit {
   const headers: Record<string, string> = {};
-  const token = getAccessToken();
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-    return headers;
-  }
-  if (isTelegramMiniApp()) {
+  if (isTelegramMiniApp() || forceTma) {
     const initData = getWebApp()?.initData;
     if (initData) {
       headers.Authorization = `tma ${initData}`;
+      return headers;
     }
+  }
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
   return headers;
 }
@@ -67,19 +67,22 @@ async function tryRefreshAccess(): Promise<boolean> {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const base = API_BASE_URL || "";
-  const doFetch = () =>
+  const doFetch = (forceTma = false) =>
     fetch(`${base}${path}`, {
       ...init,
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...buildAuthHeaders(),
+        ...buildAuthHeaders(forceTma),
         ...init?.headers,
       },
     });
 
   let res = await doFetch();
-  if (res.status === 401 && !isTelegramMiniApp()) {
+  if (res.status === 401 && isTelegramMiniApp()) {
+    clearAccessToken();
+    res = await doFetch(true);
+  } else if (res.status === 401 && !isTelegramMiniApp()) {
     const ok = await tryRefreshAccess();
     if (ok) {
       res = await doFetch();

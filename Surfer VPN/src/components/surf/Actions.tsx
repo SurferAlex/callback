@@ -6,11 +6,13 @@ export function Actions({
   onCopy,
   onRefresh,
   onHappCopied,
+  refreshing,
 }: {
   vpnKey: string;
   onCopy: () => void;
   onRefresh?: () => void;
   onHappCopied?: () => void;
+  refreshing?: boolean;
 }) {
   const openHapp = async () => {
     if (!vpnKey.trim()) return;
@@ -32,8 +34,8 @@ export function Actions({
         <Ic.Copy /><span>Скопировать ключ</span>
       </button>
       {onRefresh && (
-        <button className="btn-ghost" onClick={onRefresh}>
-          <Ic.Refresh /><span>Обновить конфиг</span>
+        <button className="btn-ghost" onClick={onRefresh} disabled={refreshing}>
+          <Ic.Refresh /><span>{refreshing ? "Обновляем…" : "Обновить конфиг"}</span>
         </button>
       )}
     </section>

@@ -46,17 +46,30 @@ func (uc *XUIAccess) PanelExpiry(ctx context.Context, client model.VPNClient) (t
 		return time.Time{}, err
 	}
 	inboundID := sx.inbound
-	if a, err := uc.repo.GetByClientUUID(ctx, client.ClientUUID); err == nil && a.InboundID > 0 {
-		inboundID = a.InboundID
+	email := ""
+	if a, err := uc.repo.GetByClientUUID(ctx, client.ClientUUID); err == nil {
+		if a.InboundID > 0 {
+			inboundID = a.InboundID
+		}
+		email = strings.TrimSpace(a.XUIClientEmail)
 	}
-	expiryMs, err := sx.client.GetClientExpiryTime(ctx, inboundID, client.ClientUUID.String())
+	if email == "" {
+		displayName := client.ClientUUID.String()
+		if client.Note != nil {
+			if n := strings.TrimSpace(*client.Note); n != "" {
+				displayName = n
+			}
+		}
+		email = makeXUIEmail(displayName, client.ClientUUID.String())
+	}
+	expiresAt, err := sx.client.FindClientExpiry(ctx, inboundID, client.ClientUUID.String(), email)
 	if err != nil {
 		return time.Time{}, err
 	}
-	if expiryMs <= 0 {
+	if expiresAt.IsZero() {
 		return time.Time{}, fmt.Errorf("xui client has no expiry")
 	}
-	return time.UnixMilli(expiryMs).UTC(), nil
+	return expiresAt.UTC(), nil
 }
 
 func (uc *XUIAccess) Provision(ctx context.Context, clientUUID uuid.UUID) (model.XUIAccess, error) {
