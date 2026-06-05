@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"strings"
-	"time"
 
 	"user-bot/internal/botapp"
 	"user-bot/internal/config"
@@ -115,6 +114,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 			}
 			r.Send.SendSticker(chatID, r.Cfg.ErrorStickerID)
 			r.Send.EditOrSend(chatID, msgID, botapp.GenericErrorText(), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
+			log.Printf("[get_config] telegram_id=%d err=%v", from.ID, err)
 			return
 		}
 		r.Send.EditOrSend(chatID, msgID, botapp.ConfigText("🔑 <b>Ваш VPN-конфиг</b>", cfgResp.VlessURI), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
@@ -128,6 +128,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 			}
 			r.Send.SendSticker(chatID, r.Cfg.ErrorStickerID)
 			r.Send.EditOrSend(chatID, msgID, botapp.GenericErrorText(), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
+			log.Printf("[refresh_config] telegram_id=%d err=%v", from.ID, err)
 			return
 		}
 		r.Send.EditOrSend(chatID, msgID, botapp.ConfigText("🔄 <b>Новый конфиг</b>", cfgResp.VlessURI), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
@@ -152,15 +153,4 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 			r.Send.EditOrSend(chatID, msgID, botapp.CabinetUnavailableText(), botapp.MainMenuKeyboard(""))
 		}
 	}
-}
-
-func formatDate(iso string) string {
-	if iso == "" {
-		return "—"
-	}
-	t, err := time.Parse(time.RFC3339, iso)
-	if err != nil {
-		return iso
-	}
-	return t.Format("02.01.2006")
 }

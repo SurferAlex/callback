@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { Waves } from "@/components/surf/Waves";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,25 +15,31 @@ declare global {
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { authenticated, bootstrap } = useAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const redirectTo = (location.state as { from?: string } | null)?.from ?? "/";
 
   useEffect(() => {
     if (authenticated) {
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [authenticated, navigate]);
+  }, [authenticated, navigate, redirectTo]);
 
   useEffect(() => {
     if (!BOT_USERNAME || !widgetRef.current) return;
 
     window.onTelegramAuth = async (user) => {
+      setLoginError(null);
       try {
         await sessionFromTelegramWidget(user);
         await bootstrap();
-        navigate("/", { replace: true });
-      } catch {
-        /* widget login failed */
+        navigate(redirectTo, { replace: true });
+      } catch (err) {
+        console.error("[auth] widget login failed:", err);
+        setLoginError("Не удалось войти. Попробуйте ещё раз.");
       }
     };
 
@@ -51,7 +57,7 @@ export function LoginPage() {
     return () => {
       delete window.onTelegramAuth;
     };
-  }, [bootstrap, navigate]);
+  }, [bootstrap, navigate, redirectTo]);
 
   return (
     <div className="screen login-screen">
@@ -72,6 +78,7 @@ export function LoginPage() {
             Укажите VITE_TELEGRAM_BOT_USERNAME в настройках сборки.
           </p>
         )}
+        {loginError && <p className="login-error">{loginError}</p>}
       </main>
     </div>
   );

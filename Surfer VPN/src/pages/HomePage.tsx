@@ -17,7 +17,7 @@ interface ToastState {
 
 /** Surfer VPN home screen. Mirrors the design's `App` component. */
 export function HomePage() {
-  const { user, loading: dataLoading, refetch } = useUser();
+  const { user, loading: dataLoading, error: userError, refetch } = useUser();
   const [vpnKeyOverride, setVpnKeyOverride] = useState<string | null>(null);
 
   const [toast, setToast] = useState<ToastState>({ show: false, msg: "" });
@@ -65,6 +65,11 @@ export function HomePage() {
       <div className="scroll">
         <Hero />
         <main className="page">
+          {userError && !user && (
+            <p className="login-error" style={{ margin: "0 0 16px" }}>
+              Не удалось загрузить профиль. Попробуйте обновить страницу.
+            </p>
+          )}
           {user && <UserCard user={user} />}
           {user && (
             <Actions

@@ -9,7 +9,6 @@ const (
 	CBPlan3m        = "plan_3m"
 	CBPlan6m        = "plan_6m"
 	CBPlan12m       = "plan_12m"
-	CBMockPay       = "mock_pay"
 	CBPaymentSoon   = "payment_soon"
 	CBChangePlan    = "change_plan"
 	CBGetConfig     = "get_config"

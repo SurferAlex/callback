@@ -35,15 +35,15 @@ type ApiUserMe = {
 
 function buildAuthHeaders(): HeadersInit {
   const headers: Record<string, string> = {};
+  const token = getAccessToken();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }
   if (isTelegramMiniApp()) {
     const initData = getWebApp()?.initData;
     if (initData) {
       headers.Authorization = `tma ${initData}`;
-    }
-  } else {
-    const token = getAccessToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
     }
   }
   return headers;
@@ -111,9 +111,11 @@ function mapApiUser(data: ApiUserMe): User {
       status:
         data.subscription.status === "active"
           ? "active"
-          : data.subscription.status === "none"
-            ? "none"
-            : "expired",
+          : data.subscription.status === "trial"
+            ? "trial"
+            : data.subscription.status === "none"
+              ? "none"
+              : "expired",
       plan: data.subscription.plan || "—",
       expiresAt,
       daysLeft: data.subscription.daysLeft ?? daysUntil(expiresAt),

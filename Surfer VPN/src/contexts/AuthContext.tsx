@@ -51,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setAuthenticated(false);
       return false;
-    } catch {
+    } catch (err) {
+      console.error("[auth] bootstrap failed:", err);
       setAuthenticated(false);
       return false;
     } finally {

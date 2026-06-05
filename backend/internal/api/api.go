@@ -14,6 +14,7 @@ import (
 func SetupServer(db *pgxpool.Pool, cfg config.Config) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.CORS(cfg.CORSOrigins))
+	r.Use(middleware.RequestLog())
 
 	serversRepo := repository.NewVPNServersRepo(db)
 	serversUC := usecase.NewVPNServers(serversRepo)
@@ -75,7 +76,6 @@ func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, authH *handlers.AuthHan
 	{
 		user.GET("/me", h.UserMe)
 		user.POST("/trial/activate", h.UserTrialActivate)
-		user.POST("/subscription/mock-activate", h.UserMockActivate)
 		user.GET("/config", h.UserGetConfig)
 		user.POST("/config/refresh", h.UserRefreshConfig)
 	}
@@ -93,6 +93,12 @@ func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, authH *handlers.AuthHan
 		protected.POST("/clients/:uuid/revoke", h.RevokeAccess)
 		protected.POST("/clients/:uuid/extend", h.ExtendClient)
 		protected.POST("/clients/:uuid/max-ips", h.UpdateClientMaxIPs)
-		protected.GET("/monitor/targets", h.ListMonitorTargets)
+	}
+
+	// Admin-only: mock subscription (internal token + telegram headers).
+	internalUser := v1.Group("/user")
+	internalUser.Use(middleware.InternalUserAuth(cfg.InternalToken))
+	{
+		internalUser.POST("/subscription/mock-activate", h.UserMockActivate)
 	}
 }

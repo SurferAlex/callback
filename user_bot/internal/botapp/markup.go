@@ -96,12 +96,3 @@ func AfterSuccessKeyboard(miniAppURL string) JSONMarkup {
 	return JSONMarkup{InlineKeyboard: rows}
 }
 
-// ParseMockPay returns plan code from "mock_pay:1m".
-func ParseMockPay(data string) (string, bool) {
-	const p = CBMockPay + ":"
-	if len(data) > len(p) && data[:len(p)] == p {
-		return data[len(p):], true
-	}
-	return "", false
-}
-

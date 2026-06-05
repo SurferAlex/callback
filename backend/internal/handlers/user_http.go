@@ -88,7 +88,11 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 		resp.Server.ID = p.Client.ServerID
 	}
 	if p.Subscription != nil {
-		resp.Subscription.Status = "active"
+		if p.Subscription.PlanCode == "trial" {
+			resp.Subscription.Status = "trial"
+		} else {
+			resp.Subscription.Status = "active"
+		}
 		resp.Subscription.Plan = p.Subscription.PlanLabel
 		resp.Subscription.ExpiresAt = p.Subscription.EndsAt.UTC().Format(time.RFC3339)
 		resp.Subscription.DaysLeft = daysLeft(p.Subscription.EndsAt)
@@ -129,7 +133,7 @@ func (h *Handlers) UserMe(c *gin.Context) {
 	_, _ = h.Users.UpsertUser(c.Request.Context(), profileFromTelegram(tg))
 	prof, err := h.Users.GetProfile(c.Request.Context(), tg.ID)
 	if err != nil {
-		log.Printf("user me failed: %v", err)
+		log.Printf("[user/me] telegram_id=%d err=%v", tg.ID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
@@ -156,7 +160,7 @@ func (h *Handlers) UserTrialActivate(c *gin.Context) {
 		case errors.Is(err, usecase.ErrInvalidServer):
 			c.JSON(http.StatusBadRequest, gin.H{"error": "vpn server not configured"})
 		default:
-			log.Printf("trial activate failed: %v", err)
+			log.Printf("[trial/activate] telegram_id=%d err=%v", tg.ID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		}
 		return
@@ -183,7 +187,7 @@ func (h *Handlers) UserMockActivate(c *gin.Context) {
 		case errors.Is(err, usecase.ErrInvalidServer):
 			c.JSON(http.StatusBadRequest, gin.H{"error": "vpn server not configured"})
 		default:
-			log.Printf("mock activate failed: %v", err)
+			log.Printf("[mock-activate] telegram_id=%d err=%v", tg.ID, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		}
 		return
@@ -203,7 +207,7 @@ func (h *Handlers) UserGetConfig(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "no active subscription"})
 			return
 		}
-		log.Printf("get config failed: %v", err)
+		log.Printf("[user/config] telegram_id=%d err=%v", tg.ID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
@@ -225,7 +229,7 @@ func (h *Handlers) UserRefreshConfig(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "no active subscription"})
 			return
 		}
-		log.Printf("refresh config failed: %v", err)
+		log.Printf("[user/config/refresh] telegram_id=%d err=%v", tg.ID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"api-vpn/internal/auth"
-	"api-vpn/internal/middleware"
 	"api-vpn/internal/model"
 	"api-vpn/internal/usecase"
 
@@ -146,21 +145,3 @@ func (h *AuthHandlers) Logout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// MeJWT returns profile for JWT-authenticated browser session.
-func (h *AuthHandlers) MeJWT(c *gin.Context) {
-	tg, ok := middleware.GetTelegram(c)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	prof, err := h.Users.GetProfile(c.Request.Context(), tg.ID)
-	if err != nil {
-		log.Printf("me jwt: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
-		return
-	}
-	if prof.User.TelegramID == 0 {
-		prof.User.TelegramID = tg.ID
-	}
-	c.JSON(http.StatusOK, toUserMeResponse(prof))
-}

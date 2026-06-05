@@ -1,7 +1,6 @@
 package vpnapi
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -56,36 +55,6 @@ func (c *Client) setUserHeaders(req *http.Request, userID int64, first, last, us
 	if username != "" {
 		req.Header.Set("X-Telegram-Username", username)
 	}
-}
-
-func (c *Client) GetMe(ctx context.Context, userID int64, first, last, username string) (UserMe, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+"/api/v1/user/me", nil)
-	if err != nil {
-		return UserMe{}, err
-	}
-	c.setUserHeaders(req, userID, first, last, username)
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return UserMe{}, err
-	}
-	defer resp.Body.Close()
-	return decodeJSON[UserMe](resp)
-}
-
-func (c *Client) MockActivate(ctx context.Context, userID int64, first, last, username, plan string) (UserMe, error) {
-	body, _ := json.Marshal(map[string]string{"plan": plan})
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.base+"/api/v1/user/subscription/mock-activate", bytes.NewReader(body))
-	if err != nil {
-		return UserMe{}, err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	c.setUserHeaders(req, userID, first, last, username)
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return UserMe{}, err
-	}
-	defer resp.Body.Close()
-	return decodeJSON[UserMe](resp)
 }
 
 func (c *Client) GetConfig(ctx context.Context, userID int64, first, last, username string) (ConfigResponse, error) {
