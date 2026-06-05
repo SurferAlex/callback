@@ -12,6 +12,9 @@ html,body{margin:0;height:100%}
 html,body,#root{
   min-height:100dvh;
   background-color:#e5f3fa;
+}
+/* Web cabinet only — TMA keeps solid #e5f3fa (no background image flash). */
+html.cabinet,html.cabinet body,html.cabinet #root{
   background-image:var(--cabinet-bg);
   background-repeat:no-repeat;
   background-position:center center;

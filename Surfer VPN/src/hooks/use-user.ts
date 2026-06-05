@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { User } from "@/types";
 import { getCurrentUser } from "@/lib/api";
@@ -23,29 +23,40 @@ export function useUser(): UseUserResult {
   const [error, setError] = useState<Error | null>(null);
   // Bumped by `refetch` to re-trigger the effect.
   const [requestId, setRequestId] = useState<number>(0);
+  const silentRef = useRef(false);
 
   const refetch = useCallback(() => {
+    silentRef.current = user !== null;
     setRequestId((id) => id + 1);
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     let active = true;
+    const silent = silentRef.current;
+    silentRef.current = false;
 
-    setLoading(true);
-    setError(null);
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
 
     getCurrentUser()
       .then((result) => {
         if (!active) return;
         setUser(result);
+        setError(null);
       })
       .catch((err: unknown) => {
         if (!active) return;
-        setError(err instanceof Error ? err : new Error(String(err)));
+        if (!silent) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
       })
       .finally(() => {
         if (!active) return;
-        setLoading(false);
+        if (!silent) {
+          setLoading(false);
+        }
       });
 
     return () => {

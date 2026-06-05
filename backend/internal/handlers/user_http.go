@@ -87,7 +87,23 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 	if p.Client != nil {
 		resp.Server.ID = p.Client.ServerID
 	}
-	if p.Subscription != nil {
+	// Expiry/days follow vpn_clients.key_expires_at — same value sent to 3x-ui on provision.
+	if p.Client != nil && p.Client.KeyExpiresAt.After(time.Now()) {
+		expiresAt := p.Client.KeyExpiresAt.UTC()
+		resp.Subscription.ExpiresAt = expiresAt.Format(time.RFC3339)
+		resp.Subscription.DaysLeft = daysLeft(expiresAt)
+		if p.Subscription != nil {
+			if p.Subscription.PlanCode == "trial" {
+				resp.Subscription.Status = "trial"
+			} else {
+				resp.Subscription.Status = "active"
+			}
+			resp.Subscription.Plan = p.Subscription.PlanLabel
+		} else {
+			resp.Subscription.Status = "active"
+			resp.Subscription.Plan = "VPN"
+		}
+	} else if p.Subscription != nil && p.Subscription.EndsAt.After(time.Now()) {
 		if p.Subscription.PlanCode == "trial" {
 			resp.Subscription.Status = "trial"
 		} else {
@@ -96,15 +112,7 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 		resp.Subscription.Plan = p.Subscription.PlanLabel
 		resp.Subscription.ExpiresAt = p.Subscription.EndsAt.UTC().Format(time.RFC3339)
 		resp.Subscription.DaysLeft = daysLeft(p.Subscription.EndsAt)
-	}
-	if p.Client != nil && p.Client.KeyExpiresAt.After(time.Now()) {
-		if p.Subscription == nil {
-			resp.Subscription.Status = "active"
-			resp.Subscription.ExpiresAt = p.Client.KeyExpiresAt.UTC().Format(time.RFC3339)
-			resp.Subscription.Plan = "VPN"
-			resp.Subscription.DaysLeft = daysLeft(p.Client.KeyExpiresAt)
-		}
-	} else if p.Subscription == nil {
+	} else {
 		resp.Subscription.Status = "none"
 	}
 	if p.Access != nil {

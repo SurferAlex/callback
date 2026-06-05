@@ -8,6 +8,17 @@
     />
     <meta name="theme-color" content="#e0f2fe" />
     <title>Surfer VPN — Свобода без границ</title>
+    <script>
+      (function () {
+        try {
+          if (/Telegram/i.test(navigator.userAgent)) {
+            document.documentElement.classList.add("tma");
+          } else {
+            document.documentElement.classList.add("cabinet");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- Telegram Mini Apps SDK (official) -->
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

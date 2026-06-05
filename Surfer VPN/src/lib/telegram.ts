@@ -1,3 +1,4 @@
+import { buildHappUrl } from "@/lib/constants";
 import type {
   ColorScheme,
   TelegramThemeParams,
@@ -86,20 +87,55 @@ export function onThemeChanged(handler: () => void): () => void {
   return () => wa.offEvent("themeChanged", handler);
 }
 
-/** Open an external link using Telegram's native handler when available. */
+/** Open an external https link (Telegram handler or new tab). */
 export function openLink(url: string): void {
   const wa = getWebApp();
   if (wa) {
     wa.openLink(url);
     return;
   }
-  if (typeof window === "undefined") return;
-  // Custom schemes (happ://) must use location, not window.open.
-  if (url.startsWith("happ://")) {
-    window.location.href = url;
-    return;
+  if (typeof window !== "undefined") {
+    window.open(url, "_blank", "noopener,noreferrer");
   }
-  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/**
+ * Open VPN config in Happ. Telegram WebApp.openLink ignores happ:// — use location.assign.
+ * @returns true if vless was copied to clipboard (fallback when deep link is unavailable)
+ */
+export async function openHappWithKey(vpnKey: string): Promise<boolean> {
+  const key = vpnKey.trim();
+  if (!key) return false;
+
+  const happUrl = buildHappUrl(key);
+  const inTma = isTelegram();
+  const mobile =
+    typeof navigator !== "undefined" &&
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (happUrl.startsWith("happ://") && inTma) {
+    const bridge = `${window.location.origin}/open-happ?url=${encodeURIComponent(happUrl)}`;
+    openLink(bridge);
+    return false;
+  }
+
+  if (happUrl.startsWith("happ://") && mobile) {
+    window.location.assign(happUrl);
+    return false;
+  }
+
+  if (happUrl.startsWith("happ://")) {
+    try {
+      await navigator.clipboard.writeText(key);
+      return true;
+    } catch {
+      window.location.assign(happUrl);
+      return false;
+    }
+  }
+
+  openLink(happUrl);
+  return false;
 }
 
 /** Fire light haptic feedback (no-op outside Telegram). */

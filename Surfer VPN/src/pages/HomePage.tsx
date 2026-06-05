@@ -9,6 +9,7 @@ import { Toast } from "@/components/surf/Toast";
 import { Splash } from "@/components/surf/Splash";
 import { useUser } from "@/hooks";
 import { refreshVpnKey } from "@/lib/api";
+import { isTelegramMiniApp } from "@/lib/runtime";
 
 interface ToastState {
   show: boolean;
@@ -26,6 +27,10 @@ export function HomePage() {
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (isTelegramMiniApp()) {
+      setMinElapsed(true);
+      return;
+    }
     const t = setTimeout(() => setMinElapsed(true), 2100);
     return () => clearTimeout(t);
   }, []);
@@ -57,7 +62,8 @@ export function HomePage() {
     fireToast("Ключ успешно скопирован");
   };
 
-  const loading = !minElapsed || dataLoading;
+  // Splash only on first load (not on silent refetch after «Обновить конфиг»).
+  const loading = (!minElapsed || (dataLoading && !user));
 
   return (
     <div className="screen">
@@ -75,6 +81,9 @@ export function HomePage() {
             <Actions
               vpnKey={displayKey}
               onCopy={copyKey}
+              onHappCopied={() =>
+                fireToast("Ключ скопирован — откройте Happ и вставьте из буфера")
+              }
               onRefresh={async () => {
                 try {
                   const key = await refreshVpnKey();

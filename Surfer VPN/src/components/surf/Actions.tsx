@@ -1,19 +1,22 @@
-import { openLink, haptic } from '@/lib/telegram';
-import { buildHappUrl } from '@/lib/constants';
+import { openHappWithKey, haptic } from '@/lib/telegram';
 import { Ic } from '@/components/surf/icons';
 
 export function Actions({
   vpnKey,
   onCopy,
   onRefresh,
+  onHappCopied,
 }: {
   vpnKey: string;
   onCopy: () => void;
   onRefresh?: () => void;
+  onHappCopied?: () => void;
 }) {
-  const openHapp = () => {
-    openLink(buildHappUrl(vpnKey));
+  const openHapp = async () => {
+    if (!vpnKey.trim()) return;
     haptic('medium');
+    const copied = await openHappWithKey(vpnKey);
+    if (copied) onHappCopied?.();
   };
   return (
     <section className="actions">
