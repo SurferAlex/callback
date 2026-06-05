@@ -50,6 +50,7 @@ type SubscriptionsRepo interface {
 	DeactivateActiveForUser(ctx context.Context, telegramUserID int64) error
 	GetActiveForUser(ctx context.Context, telegramUserID int64, now time.Time) (model.Subscription, error)
 	UpdateActiveClientUUID(ctx context.Context, telegramUserID int64, clientUUID string, now time.Time) error
+	UpdateActiveEndsAt(ctx context.Context, telegramUserID int64, endsAt time.Time, now time.Time) error
 }
 
 type UserProfile struct {
@@ -121,8 +122,9 @@ func (s *UserService) GetProfile(ctx context.Context, telegramID int64) (UserPro
 		out.Subscription = &sub
 	}
 
-	client, err := s.clients.GetActiveByTelegramUserID(ctx, telegramID)
+	client, err := s.clients.GetActiveRecordByTelegramUserID(ctx, telegramID)
 	if err == nil {
+		client = s.syncClientExpiryFromPanel(ctx, telegramID, client)
 		out.Client = &client
 		if s.xui != nil {
 			if acc, err := s.xui.Get(ctx, client.ClientUUID); err == nil {
@@ -132,6 +134,26 @@ func (s *UserService) GetProfile(ctx context.Context, telegramID int64) (UserPro
 	}
 
 	return out, nil
+}
+
+// syncClientExpiryFromPanel pulls expiryTime from 3x-ui and updates local DB when the panel was edited manually.
+func (s *UserService) syncClientExpiryFromPanel(ctx context.Context, telegramID int64, client model.VPNClient) model.VPNClient {
+	if s.xui == nil {
+		return client
+	}
+	panelExpiry, err := s.xui.PanelExpiry(ctx, client)
+	if err != nil {
+		return client
+	}
+	if panelExpiry.Sub(client.KeyExpiresAt.UTC()).Abs() < time.Minute {
+		return client
+	}
+	updated, err := s.clients.SetKeyExpiresAt(ctx, client.ClientUUID, panelExpiry)
+	if err != nil {
+		return client
+	}
+	_ = s.subs.UpdateActiveEndsAt(ctx, telegramID, panelExpiry, s.now())
+	return updated
 }
 
 func (s *UserService) ActivateTrial(ctx context.Context, telegramID int64, profile model.UpsertUserParams) (UserProfile, error) {
@@ -307,7 +329,7 @@ func (s *UserService) MockActivate(ctx context.Context, telegramID int64, planCo
 }
 
 func (s *UserService) GetConfig(ctx context.Context, telegramID int64) (model.XUIAccess, error) {
-	client, err := s.clients.GetActiveByTelegramUserID(ctx, telegramID)
+	client, err := s.activeClientFromPanel(ctx, telegramID)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
@@ -324,8 +346,20 @@ func (s *UserService) GetConfig(ctx context.Context, telegramID int64) (model.XU
 	return s.xui.Provision(ctx, client.ClientUUID)
 }
 
+func (s *UserService) activeClientFromPanel(ctx context.Context, telegramID int64) (model.VPNClient, error) {
+	client, err := s.clients.GetActiveRecordByTelegramUserID(ctx, telegramID)
+	if err != nil {
+		return model.VPNClient{}, err
+	}
+	client = s.syncClientExpiryFromPanel(ctx, telegramID, client)
+	if !client.KeyExpiresAt.After(s.now()) {
+		return model.VPNClient{}, ErrExpired
+	}
+	return client, nil
+}
+
 func (s *UserService) RefreshConfig(ctx context.Context, telegramID int64) (model.XUIAccess, error) {
-	client, err := s.clients.GetActiveByTelegramUserID(ctx, telegramID)
+	client, err := s.activeClientFromPanel(ctx, telegramID)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
@@ -363,6 +397,7 @@ func (s *UserService) RefreshConfig(ctx context.Context, telegramID int64) (mode
 	}
 
 	_ = s.subs.UpdateActiveClientUUID(ctx, telegramID, newClient.ClientUUID.String(), s.now())
+	_ = s.subs.UpdateActiveEndsAt(ctx, telegramID, newClient.KeyExpiresAt, s.now())
 
 	return access, nil
 }

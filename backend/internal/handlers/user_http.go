@@ -87,7 +87,7 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 	if p.Client != nil {
 		resp.Server.ID = p.Client.ServerID
 	}
-	// Expiry/days follow vpn_clients.key_expires_at — same value sent to 3x-ui on provision.
+	// Expiry/days follow vpn_clients.key_expires_at (synced from 3x-ui panel on /me and before config refresh).
 	if p.Client != nil && p.Client.KeyExpiresAt.After(time.Now()) {
 		expiresAt := p.Client.KeyExpiresAt.UTC()
 		resp.Subscription.ExpiresAt = expiresAt.Format(time.RFC3339)

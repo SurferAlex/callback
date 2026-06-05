@@ -21,7 +21,9 @@ var ErrAmbiguousRef = errors.New("ambiguous client ref")
 type VPNClientsRepo interface {
 	GetByUUID(ctx context.Context, id uuid.UUID) (model.VPNClient, error)
 	GetActiveByTelegramUserID(ctx context.Context, telegramUserID int64, now time.Time) (model.VPNClient, error)
+	GetActiveRecordByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error)
 	GetLatestByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error)
+	SetKeyExpiresAt(ctx context.Context, id uuid.UUID, expiresAt time.Time) (model.VPNClient, error)
 	Create(ctx context.Context, p model.CreateVPNClientParams) (model.VPNClient, error)
 	Deactivate(ctx context.Context, id uuid.UUID) error
 	DeactivateActiveByTelegramUserID(ctx context.Context, telegramUserID int64) error
@@ -91,6 +93,14 @@ func (uc *VPNClients) GetByUUID(ctx context.Context, id uuid.UUID) (model.VPNCli
 
 func (uc *VPNClients) GetActiveByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error) {
 	return uc.repo.GetActiveByTelegramUserID(ctx, telegramUserID, uc.now())
+}
+
+func (uc *VPNClients) GetActiveRecordByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error) {
+	return uc.repo.GetActiveRecordByTelegramUserID(ctx, telegramUserID)
+}
+
+func (uc *VPNClients) SetKeyExpiresAt(ctx context.Context, id uuid.UUID, expiresAt time.Time) (model.VPNClient, error) {
+	return uc.repo.SetKeyExpiresAt(ctx, id, expiresAt.UTC())
 }
 
 func (uc *VPNClients) GetLatestByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error) {

@@ -50,6 +50,16 @@ WHERE telegram_user_id = $1 AND status = 'active';
 	return err
 }
 
+func (r *SubscriptionsRepo) UpdateActiveEndsAt(ctx context.Context, telegramUserID int64, endsAt time.Time, now time.Time) error {
+	const q = `
+UPDATE subscriptions
+SET ends_at = $3, updated_at = now()
+WHERE telegram_user_id = $1 AND status = 'active' AND ends_at > $2;
+`
+	_, err := r.db.Exec(ctx, q, telegramUserID, now.UTC(), endsAt.UTC())
+	return err
+}
+
 func (r *SubscriptionsRepo) UpdateActiveClientUUID(ctx context.Context, telegramUserID int64, clientUUID string, now time.Time) error {
 	const q = `
 UPDATE subscriptions

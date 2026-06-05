@@ -50,6 +50,34 @@ LIMIT 1;
 	return c, err
 }
 
+func (r *VPNClientsRepo) GetActiveRecordByTelegramUserID(ctx context.Context, telegramUserID int64) (model.VPNClient, error) {
+	const q = `
+SELECT
+  id, client_uuid, server_id, telegram_user_id, max_ips, key_expires_at, is_active, note, created_at, updated_at
+FROM vpn_clients
+WHERE telegram_user_id = $1 AND is_active = true
+ORDER BY created_at DESC
+LIMIT 1;
+`
+	var c model.VPNClient
+	err := r.db.QueryRow(ctx, q, telegramUserID).Scan(
+		&c.ID,
+		&c.ClientUUID,
+		&c.ServerID,
+		&c.TelegramUserID,
+		&c.MaxIPs,
+		&c.KeyExpiresAt,
+		&c.IsActive,
+		&c.Note,
+		&c.CreatedAt,
+		&c.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.VPNClient{}, usecase.ErrNotFound
+	}
+	return c, err
+}
+
 func (r *VPNClientsRepo) GetActiveByTelegramUserID(ctx context.Context, telegramUserID int64, now time.Time) (model.VPNClient, error) {
 	const q = `
 SELECT
@@ -218,6 +246,32 @@ ORDER BY created_at DESC;
 		out = append(out, c)
 	}
 	return out, rows.Err()
+}
+
+func (r *VPNClientsRepo) SetKeyExpiresAt(ctx context.Context, clientUUID uuid.UUID, expiresAt time.Time) (model.VPNClient, error) {
+	const q = `
+UPDATE vpn_clients
+SET key_expires_at = $2, updated_at = now()
+WHERE client_uuid = $1
+RETURNING id, client_uuid, server_id, telegram_user_id, max_ips, key_expires_at, is_active, note, created_at, updated_at;
+`
+	var out model.VPNClient
+	err := r.db.QueryRow(ctx, q, clientUUID, expiresAt.UTC()).Scan(
+		&out.ID,
+		&out.ClientUUID,
+		&out.ServerID,
+		&out.TelegramUserID,
+		&out.MaxIPs,
+		&out.KeyExpiresAt,
+		&out.IsActive,
+		&out.Note,
+		&out.CreatedAt,
+		&out.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return model.VPNClient{}, usecase.ErrNotFound
+	}
+	return out, err
 }
 
 func (r *VPNClientsRepo) ExtendKeyExpiresAt(ctx context.Context, clientUUID uuid.UUID, addDays int, now time.Time) (model.VPNClient, error) {

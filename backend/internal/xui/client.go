@@ -162,6 +162,31 @@ type streamSettings struct {
 	} `json:"realitySettings"`
 }
 
+type inboundSettings struct {
+	Clients []xrayClient `json:"clients"`
+}
+
+// GetClientExpiryTime returns expiryTime (unix ms) for a client UUID in the inbound settings.
+func (c *Client) GetClientExpiryTime(ctx context.Context, inboundID int64, clientUUID string) (int64, error) {
+	var resp apiResponse[inboundObj]
+	if err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/panel/api/inbounds/get/%d", inboundID), nil, &resp); err != nil {
+		return 0, err
+	}
+	if !resp.Success {
+		return 0, fmt.Errorf("xui get inbound: %s", resp.Msg)
+	}
+	var st inboundSettings
+	if err := json.Unmarshal([]byte(resp.Obj.Settings), &st); err != nil {
+		return 0, fmt.Errorf("parse inbound settings: %w", err)
+	}
+	for _, cl := range st.Clients {
+		if cl.ID == clientUUID {
+			return cl.ExpiryTime, nil
+		}
+	}
+	return 0, fmt.Errorf("xui client %s not found", clientUUID)
+}
+
 func (c *Client) GetInbound(ctx context.Context, inboundID int64) (inboundObj, streamSettings, error) {
 	var resp apiResponse[inboundObj]
 	if err := c.doJSON(ctx, http.MethodGet, fmt.Sprintf("/panel/api/inbounds/get/%d", inboundID), nil, &resp); err != nil {

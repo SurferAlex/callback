@@ -39,6 +39,26 @@ func (uc *XUIAccess) Get(ctx context.Context, clientUUID uuid.UUID) (model.XUIAc
 	return uc.repo.GetByClientUUID(ctx, clientUUID)
 }
 
+// PanelExpiry reads expiryTime from 3x-ui for the active client (source of truth for manual panel edits).
+func (uc *XUIAccess) PanelExpiry(ctx context.Context, client model.VPNClient) (time.Time, error) {
+	sx, err := uc.registry.forServer(ctx, client.ServerID)
+	if err != nil {
+		return time.Time{}, err
+	}
+	inboundID := sx.inbound
+	if a, err := uc.repo.GetByClientUUID(ctx, client.ClientUUID); err == nil && a.InboundID > 0 {
+		inboundID = a.InboundID
+	}
+	expiryMs, err := sx.client.GetClientExpiryTime(ctx, inboundID, client.ClientUUID.String())
+	if err != nil {
+		return time.Time{}, err
+	}
+	if expiryMs <= 0 {
+		return time.Time{}, fmt.Errorf("xui client has no expiry")
+	}
+	return time.UnixMilli(expiryMs).UTC(), nil
+}
+
 func (uc *XUIAccess) Provision(ctx context.Context, clientUUID uuid.UUID) (model.XUIAccess, error) {
 	client, err := uc.clientsUC.GetActiveByUUID(ctx, clientUUID)
 	if err != nil {
