@@ -165,6 +165,16 @@ func (h *Handlers) UserTrialActivate(c *gin.Context) {
 		}
 		return
 	}
+	if prof.Client == nil || prof.Access == nil {
+		log.Printf("[trial/activate] telegram_id=%d empty profile after success", tg.ID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+	if prof.User.TelegramID == 0 {
+		prof.User.TelegramID = tg.ID
+		prof.User.FirstName = tg.FirstName
+	}
+	log.Printf("[trial/activate] telegram_id=%d ok", tg.ID)
 	c.JSON(http.StatusOK, toUserMeResponse(prof))
 }
 

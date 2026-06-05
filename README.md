@@ -39,10 +39,10 @@ cd "Surfer VPN" && cp .env.example .env.local && npm run dev
 - `POST /api/v1/auth/session/webapp` — Mini App
 - `POST /api/v1/auth/session/widget` — браузер
 - `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`
-- `GET /api/v1/user/me`, `POST /api/v1/user/trial/activate`
+- `GET /api/v1/user/me`
 - `GET /api/v1/user/config`, `POST /api/v1/user/config/refresh`
 
-Admin (`X-Internal-Token`): `/api/v1/clients/*`, `/api/v1/servers`, `POST /api/v1/user/subscription/mock-activate`.
+Admin (`X-Internal-Token` + `X-Telegram-User-Id`): `/api/v1/clients/*`, `/api/v1/servers`, `POST /api/v1/user/trial/activate`, `POST /api/v1/user/subscription/mock-activate`.
 
 ## Стек
 
