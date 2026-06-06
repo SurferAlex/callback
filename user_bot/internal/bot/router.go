@@ -130,7 +130,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 		r.Send.EditOrSend(chatID, msgID, botapp.ConfigText("🔄 <b>Новый конфиг</b>", cfgResp.VlessURI), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
 
 	case data == botapp.CBInstructions:
-		r.Send.EditOrSend(chatID, msgID, botapp.GuideMenuText(), botapp.InstructionsKeyboard())
+		r.Send.EditOrSend(chatID, msgID, botapp.GuideMenuText(), botapp.InstructionsKeyboard(r.Cfg.MiniAppURL))
 
 	case data == botapp.CBSupport:
 		r.Send.EditOrSend(chatID, msgID, botapp.SupportText(r.Cfg.SupportContact, r.Cfg.SupportTelegramURL), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))

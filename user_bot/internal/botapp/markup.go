@@ -89,10 +89,16 @@ func CheckoutKeyboard() JSONMarkup {
 	}}
 }
 
-func InstructionsKeyboard() JSONMarkup {
-	return JSONMarkup{InlineKeyboard: [][]inlineBtn{
-		BackMainRow(),
-	}}
+func InstructionsKeyboard(miniAppURL string) JSONMarkup {
+	var rows [][]inlineBtn
+	if miniAppURL != "" {
+		rows = append(rows, []inlineBtn{webAppBtn("🌊 Личный кабинет", miniAppURL)})
+	} else {
+		rows = append(rows, []inlineBtn{cbBtn("🌊 Личный кабинет", CBCabinet)})
+	}
+	rows = append(rows, []inlineBtn{cbBtn("🌐 Веб-кабинет", CBWebCabinet)})
+	rows = append(rows, BackMainRow())
+	return JSONMarkup{InlineKeyboard: rows}
 }
 
 func AfterSuccessKeyboard(miniAppURL string) JSONMarkup {
