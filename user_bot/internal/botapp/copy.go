@@ -5,15 +5,15 @@ import (
 	"strings"
 )
 
-func MainMenuText(name string) string {
-	if name == "" {
-		name = "друг"
-	}
-	return fmt.Sprintf(`🏄 <b>Surf VPN</b>
+func MainMenuText() string {
+	return `🌊 <b>Surf VPN</b>
 
-Привет, %s!
+Лови свою волну безопасного интернета.
 
-Выберите действие:`, escapeHTML(name))
+🔒 Надежная защита
+⚡ Высокая скорость
+
+Выберите действие:`
 }
 
 func TrialIntroText() string {
@@ -154,38 +154,6 @@ func GuideMenuText() string {
 ⚠️ Рекомендуем один раз открыть веб-кабинет и авторизоваться через Telegram.
 
 Если доступ к Telegram будет недоступен, вы сможете войти в веб-кабинет и самостоятельно получить новый конфиг или обновить существующий ключ.`
-}
-
-func GuideIOSText() string {
-	return `📱 <b>iPhone</b>
-
-1. Установите Happ из App Store
-2. Получите конфиг в боте
-3. Импортируйте ключ в Happ`
-}
-
-func GuideAndroidText() string {
-	return `📱 <b>Android</b>
-
-1. Установите Happ
-2. Нажмите «Получить конфиг»
-3. Добавьте ключ в приложение`
-}
-
-func GuideWindowsText() string {
-	return `🖥 <b>Windows</b>
-
-1. Установите VPN-клиент с поддержкой VLESS
-2. Скопируйте конфиг из бота
-3. Вставьте в клиент`
-}
-
-func GuideMacText() string {
-	return `🍎 <b>macOS</b>
-
-1. Установите Happ
-2. Получите конфиг в боте
-3. Подключитесь в один тап`
 }
 
 func escapeHTML(s string) string {

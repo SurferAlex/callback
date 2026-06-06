@@ -42,8 +42,7 @@ func (r *Router) HandleUpdate(ctx context.Context, update tgbotapi.Update) {
 
 func (r *Router) handleStart(chatID int64, from *tgbotapi.User) {
 	r.Send.SendSticker(chatID, r.Cfg.WelcomeStickerID)
-	name := from.FirstName
-	r.Send.SendHTML(chatID, botapp.MainMenuText(name), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
+	r.Send.SendHTML(chatID, botapp.MainMenuText(), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
 }
 
 func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery) {
@@ -58,7 +57,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 	r.Send.AnswerCallback(cq.ID, "")
 
 	showMain := func() {
-		r.Send.EditOrSend(chatID, msgID, botapp.MainMenuText(from.FirstName), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
+		r.Send.EditOrSend(chatID, msgID, botapp.MainMenuText(), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
 	}
 
 	switch {
@@ -132,15 +131,6 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 
 	case data == botapp.CBInstructions:
 		r.Send.EditOrSend(chatID, msgID, botapp.GuideMenuText(), botapp.InstructionsKeyboard())
-
-	case data == botapp.CBGuideIOS:
-		r.Send.EditOrSend(chatID, msgID, botapp.GuideIOSText(), botapp.InstructionsKeyboard())
-	case data == botapp.CBGuideAndroid:
-		r.Send.EditOrSend(chatID, msgID, botapp.GuideAndroidText(), botapp.InstructionsKeyboard())
-	case data == botapp.CBGuideWin:
-		r.Send.EditOrSend(chatID, msgID, botapp.GuideWindowsText(), botapp.InstructionsKeyboard())
-	case data == botapp.CBGuideMac:
-		r.Send.EditOrSend(chatID, msgID, botapp.GuideMacText(), botapp.InstructionsKeyboard())
 
 	case data == botapp.CBSupport:
 		r.Send.EditOrSend(chatID, msgID, botapp.SupportText(r.Cfg.SupportContact, r.Cfg.SupportTelegramURL), botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))

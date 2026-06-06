@@ -91,8 +91,6 @@ func CheckoutKeyboard() JSONMarkup {
 
 func InstructionsKeyboard() JSONMarkup {
 	return JSONMarkup{InlineKeyboard: [][]inlineBtn{
-		{cbBtn("iPhone", CBGuideIOS), cbBtn("Android", CBGuideAndroid)},
-		{cbBtn("Windows", CBGuideWin), cbBtn("macOS", CBGuideMac)},
 		BackMainRow(),
 	}}
 }
