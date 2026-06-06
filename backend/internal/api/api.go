@@ -60,6 +60,7 @@ func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, authH *handlers.AuthHan
 	{
 		v1.GET("/ping", h.Ping)
 		v1.GET("/health", h.Health)
+		v1.GET("/happ/open", h.HappOpen)
 	}
 
 	authGroup := v1.Group("/auth")

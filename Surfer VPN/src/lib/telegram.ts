@@ -1,3 +1,5 @@
+import { buildHappApiOpenUrl, buildHappUrl } from "@/lib/constants";
+import { isTelegramMiniApp } from "@/lib/runtime";
 import type {
   ColorScheme,
   TelegramThemeParams,
@@ -99,6 +101,19 @@ export function openLink(url: string): void {
     return;
   }
   window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/**
+ * Open VPN config in Happ.
+ * Mini App: api.surfwave.space/happ/open → 302 happ://add/…
+ * Web cabinet: direct happ://
+ */
+export function openHappUrl(vpnKey: string): void {
+  const url = isTelegramMiniApp()
+    ? buildHappApiOpenUrl(vpnKey)
+    : buildHappUrl(vpnKey);
+  if (!url) return;
+  openLink(url);
 }
 
 /** Fire light haptic feedback (no-op outside Telegram). */

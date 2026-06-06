@@ -7,6 +7,10 @@ export const BRAND = {
   subtitle: "Быстрый и безопасный интернет для тебя",
 } as const;
 
+/** API base URL (Happ bridge for Mini App). */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? "https://api.surfwave.space";
+
 /** Base URL for subscription pages (optional web fallback). */
 export const SUB_BASE_URL =
   import.meta.env.VITE_SUB_BASE_URL ?? "https://sub.surfervpn.com";
@@ -17,6 +21,14 @@ export function buildHappUrl(vpnKey: string): string {
   if (!key) return "";
   if (key.startsWith("happ://")) return key;
   return `happ://add/${key}`;
+}
+
+/** HTTPS bridge on API → 302 to happ://add/… (for Telegram Mini App). */
+export function buildHappApiOpenUrl(vpnKey: string): string {
+  const key = vpnKey.trim();
+  if (!key) return "";
+  const base = API_BASE_URL.replace(/\/$/, "");
+  return `${base}/api/v1/happ/open?key=${encodeURIComponent(key)}`;
 }
 
 /** Install grid data — mock links for now. */

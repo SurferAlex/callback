@@ -1,12 +1,12 @@
 import type { User } from "@/types";
+import { API_BASE_URL } from "@/lib/constants";
 import { MOCK_USER, daysUntil } from "@/lib/mock-data";
 import { clearAccessToken, getAccessToken } from "@/lib/auth-store";
 import { isTelegramMiniApp } from "@/lib/runtime";
 import { readStoredTelegramProfile } from "@/lib/tg-profile";
 import { getTelegramUser, getWebApp } from "@/lib/telegram";
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "";
+export { API_BASE_URL };
 
 const USE_MOCK =
   import.meta.env.VITE_USE_MOCK === "true" ||
