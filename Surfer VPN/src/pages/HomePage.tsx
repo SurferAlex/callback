@@ -83,9 +83,6 @@ export function HomePage() {
             <Actions
               vpnKey={displayKey}
               onCopy={copyKey}
-              onHappCopied={() =>
-                fireToast("Ключ скопирован — откройте Happ и вставьте из буфера")
-              }
               refreshing={refreshing}
               onRefresh={async () => {
                 if (refreshing) return;
