@@ -26,8 +26,10 @@ type AuthHandlers struct {
 }
 
 type tokenResponse struct {
-	AccessToken string `json:"accessToken"`
-	ExpiresIn   int64  `json:"expiresIn"`
+	AccessToken string  `json:"accessToken"`
+	ExpiresIn   int64   `json:"expiresIn"`
+	FirstName   string  `json:"firstName,omitempty"`
+	Username    *string `json:"username,omitempty"`
 }
 
 func (h *AuthHandlers) setRefreshCookie(c *gin.Context, raw string, exp time.Time) {
@@ -42,10 +44,17 @@ func (h *AuthHandlers) clearRefreshCookie(c *gin.Context) {
 
 func (h *AuthHandlers) writeTokens(c *gin.Context, pair usecase.TokenPair) {
 	h.setRefreshCookie(c, pair.RefreshRaw, pair.RefreshExp)
-	c.JSON(http.StatusOK, tokenResponse{
+	resp := tokenResponse{
 		AccessToken: pair.AccessToken,
 		ExpiresIn:   int64(time.Until(pair.AccessExp).Seconds()),
-	})
+	}
+	if prof, err := h.Users.GetProfile(c.Request.Context(), pair.TelegramID); err == nil {
+		if strings.TrimSpace(prof.User.FirstName) != "" {
+			resp.FirstName = strings.TrimSpace(prof.User.FirstName)
+		}
+		resp.Username = prof.User.Username
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 // SessionTelegramWebApp exchanges Mini App initData for JWT + refresh cookie.

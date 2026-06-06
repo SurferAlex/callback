@@ -119,7 +119,11 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 		resp.VpnKey = p.Access.VLESSURI
 	}
 	if resp.FirstName == "" {
-		resp.FirstName = "Пользователь"
+		if resp.Username != nil && strings.TrimSpace(*resp.Username) != "" {
+			resp.FirstName = strings.TrimSpace(*resp.Username)
+		} else {
+			resp.FirstName = "Пользователь"
+		}
 	}
 	return resp
 }

@@ -1,11 +1,17 @@
 import { API_BASE_URL } from "@/lib/api";
 import { clearAccessToken, setAccessToken } from "@/lib/auth-store";
-import { saveTelegramProfile } from "@/lib/tg-profile";
-import { getWebApp } from "@/lib/telegram";
+import {
+  clearTelegramProfile,
+  saveTelegramProfile,
+  saveTelegramProfileFields,
+} from "@/lib/tg-profile";
+import { getTelegramUser, getWebApp } from "@/lib/telegram";
 
 type TokenResponse = {
   accessToken: string;
   expiresIn: number;
+  firstName?: string;
+  username?: string;
 };
 
 async function parseTokenResponse(res: Response): Promise<TokenResponse> {
@@ -22,6 +28,12 @@ async function parseTokenResponse(res: Response): Promise<TokenResponse> {
 
 function applyToken(data: TokenResponse) {
   setAccessToken(data.accessToken);
+  if (data.firstName?.trim() || data.username?.trim()) {
+    saveTelegramProfileFields({
+      first_name: data.firstName?.trim(),
+      username: data.username?.trim(),
+    });
+  }
   return data;
 }
 
@@ -30,6 +42,14 @@ export async function sessionFromTelegramWebApp(): Promise<TokenResponse> {
   const initData = getWebApp()?.initData;
   if (!initData) {
     throw new Error("no telegram init data");
+  }
+  const tg = getTelegramUser();
+  if (tg) {
+    saveTelegramProfile({
+      first_name: tg.first_name,
+      last_name: tg.last_name,
+      username: tg.username,
+    });
   }
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/session/webapp`, {
     method: "POST",
@@ -70,6 +90,7 @@ export async function refreshSession(): Promise<TokenResponse | null> {
 
 export async function logoutSession(): Promise<void> {
   clearAccessToken();
+  clearTelegramProfile();
   await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
     method: "POST",
     credentials: "include",
