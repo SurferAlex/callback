@@ -35,8 +35,7 @@ func MainMenuKeyboard(miniAppURL string) JSONMarkup {
 	rows := [][]inlineBtn{
 		{cbBtn("🎁 Бесплатно на 24 часа", CBTrialMenu)},
 		{cbBtn("💳 Купить VPN", CBBuyVPN)},
-		{cbBtn("🔑 Получить конфиг", CBGetConfig), cbBtn("🔄 Обновить конфиг", CBRefreshConfig)},
-		{cbBtn("📱 Инструкции", CBInstructions), cbBtn("🛟 Поддержка", CBSupport)},
+		{cbBtn("📖 Как подключиться", CBInstructions), cbBtn("🛟 Поддержка", CBSupport)},
 	}
 	if miniAppURL != "" {
 		rows = append(rows, []inlineBtn{webAppBtn("🌊 Личный кабинет", miniAppURL)})
@@ -99,12 +98,11 @@ func InstructionsKeyboard() JSONMarkup {
 }
 
 func AfterSuccessKeyboard(miniAppURL string) JSONMarkup {
-	rows := [][]inlineBtn{
-		{cbBtn("🔑 Получить конфиг", CBGetConfig)},
-	}
+	var rows [][]inlineBtn
 	if miniAppURL != "" {
 		rows = append(rows, []inlineBtn{webAppBtn("🌊 Личный кабинет", miniAppURL)})
 	}
+	rows = append(rows, []inlineBtn{cbBtn("🌐 Веб-кабинет", CBWebCabinet)})
 	rows = append(rows, BackMainRow())
 	return JSONMarkup{InlineKeyboard: rows}
 }

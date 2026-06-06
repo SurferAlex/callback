@@ -41,7 +41,7 @@ func TrialSuccessText() string {
 📱 Подключений: до <b>2 устройств</b>
 ⚡ Скорость: без ограничений
 
-Ваш VPN-конфиг готов к использованию.`
+Откройте <b>🌊 Личный кабинет</b> или <b>🌐 Веб-кабинет</b>, чтобы получить конфиг.`
 }
 
 func MockSuccessText(plan PlanOffer, expires string, daysLeft int) string {
@@ -136,7 +136,7 @@ func WebCabinetText(webURL string) string {
 }
 
 func GuideMenuText() string {
-	return `📱 <b>Инструкция по использованию Surf VPN</b>
+	return `📖 <b>Как подключиться</b>
 
 Для подключения VPN и управления подпиской используйте:
 

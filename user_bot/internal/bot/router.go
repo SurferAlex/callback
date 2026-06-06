@@ -69,7 +69,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 		r.Send.EditOrSend(chatID, msgID, botapp.TrialIntroText(), botapp.TrialIntroKeyboard())
 
 	case data == botapp.CBTrialActivate:
-		me, err := r.API.ActivateTrial(ctx, from.ID, from.FirstName, from.LastName, from.UserName)
+		_, err := r.API.ActivateTrial(ctx, from.ID, from.FirstName, from.LastName, from.UserName)
 		if err != nil {
 			if vpnapi.IsTrialAlreadyUsed(err) {
 				r.Send.SendSticker(chatID, r.Cfg.ErrorStickerID)
@@ -77,7 +77,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 				return
 			}
 			if vpnapi.IsTrialActiveSubscription(err) {
-				r.Send.EditOrSend(chatID, msgID, "⚡ У вас уже есть активная подписка.\n\nИспользуйте «Получить конфиг».", botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
+				r.Send.EditOrSend(chatID, msgID, "⚡ У вас уже есть активная подписка.\n\nПолучите конфиг в <b>🌊 Личном кабинете</b> или <b>🌐 Веб-кабинете</b>.", botapp.MainMenuKeyboard(r.Cfg.MiniAppURL))
 				return
 			}
 			r.Send.SendSticker(chatID, r.Cfg.ErrorStickerID)
@@ -87,9 +87,6 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 		}
 		r.Send.SendSticker(chatID, r.Cfg.SuccessStickerID)
 		r.Send.EditOrSend(chatID, msgID, botapp.TrialSuccessText(), botapp.AfterSuccessKeyboard(r.Cfg.MiniAppURL))
-		if me.VpnKey != "" {
-			r.Send.SendHTML(chatID, botapp.ConfigText("🔑 <b>Ваш конфиг</b>", me.VpnKey), botapp.AfterSuccessKeyboard(r.Cfg.MiniAppURL))
-		}
 
 	case data == botapp.CBBuyVPN || data == botapp.CBChangePlan:
 		r.Send.EditOrSend(chatID, msgID, botapp.BuyPlansIntroText(), botapp.PlansKeyboard())
