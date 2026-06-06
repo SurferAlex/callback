@@ -20,6 +20,7 @@ const (
 	CBGuideMac      = "guide_mac"
 	CBSupport       = "support"
 	CBCabinet       = "cabinet"
+	CBWebCabinet    = "web_cabinet"
 	CBBackMain      = "back_main"
 )
 

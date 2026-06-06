@@ -26,6 +26,11 @@ func webAppBtn(text, url string) inlineBtn {
 	return inlineBtn{Text: text, WebApp: &webAppInfo{URL: url}}
 }
 
+func urlBtn(text, url string) inlineBtn {
+	u := url
+	return inlineBtn{Text: text, URL: &u}
+}
+
 func MainMenuKeyboard(miniAppURL string) JSONMarkup {
 	rows := [][]inlineBtn{
 		{cbBtn("🎁 Бесплатно на 24 часа", CBTrialMenu)},
@@ -38,7 +43,15 @@ func MainMenuKeyboard(miniAppURL string) JSONMarkup {
 	} else {
 		rows = append(rows, []inlineBtn{cbBtn("🌊 Личный кабинет", CBCabinet)})
 	}
+	rows = append(rows, []inlineBtn{cbBtn("🌐 Веб-кабинет", CBWebCabinet)})
 	return JSONMarkup{InlineKeyboard: rows}
+}
+
+func WebCabinetKeyboard(webURL string) JSONMarkup {
+	return JSONMarkup{InlineKeyboard: [][]inlineBtn{
+		{urlBtn("🌐 Открыть веб-кабинет", webURL)},
+		BackMainRow(),
+	}}
 }
 
 func BackMainRow() []inlineBtn {

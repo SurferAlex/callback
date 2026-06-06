@@ -152,5 +152,12 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 		if r.Cfg.MiniAppURL == "" {
 			r.Send.EditOrSend(chatID, msgID, botapp.CabinetUnavailableText(), botapp.MainMenuKeyboard(""))
 		}
+
+	case data == botapp.CBWebCabinet:
+		webURL := r.Cfg.MiniAppURL
+		if webURL == "" {
+			webURL = "https://app.surfwave.space"
+		}
+		r.Send.EditOrSend(chatID, msgID, botapp.WebCabinetText(webURL), botapp.WebCabinetKeyboard(webURL))
 	}
 }
