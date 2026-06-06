@@ -1,5 +1,4 @@
-import { openLink, haptic } from '@/lib/telegram';
-import { buildHappUrl } from '@/lib/constants';
+import { openHappUrl, haptic } from '@/lib/telegram';
 import { Ic } from '@/components/surf/icons';
 
 export function Actions({
@@ -16,7 +15,7 @@ export function Actions({
   const openHapp = () => {
     if (!vpnKey.trim()) return;
     haptic('medium');
-    openLink(buildHappUrl(vpnKey));
+    openHappUrl(vpnKey);
   };
   return (
     <section className="actions">

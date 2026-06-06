@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { SubscriptionStatus, User } from "@/types";
+import { userAvatarLetter, userDisplayName } from "@/lib/user-display";
 import { formatDate, pluralize } from "@/lib/utils";
 import { Ic } from "@/components/surf/icons";
 
@@ -47,13 +48,14 @@ interface UserCardProps {
 
 export function UserCard({ user }: UserCardProps) {
   const left = user.subscription.daysLeft;
+  const displayName = userDisplayName(user);
   return (
     <section className="card user-card">
       <div className="user-top">
         <div className="user-id">
-          <span className="user-avatar">{user.firstName[0]}</span>
+          <span className="user-avatar">{userAvatarLetter(user)}</span>
           <div>
-            <div className="user-name">{user.firstName}</div>
+            <div className="user-name">{displayName}</div>
             <div className="user-plan">{user.subscription.plan} · подписка</div>
           </div>
         </div>

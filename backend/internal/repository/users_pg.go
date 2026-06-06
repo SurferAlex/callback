@@ -24,9 +24,9 @@ func (r *UsersRepo) Upsert(ctx context.Context, p model.UpsertUserParams) (model
 INSERT INTO users (telegram_id, first_name, last_name, username)
 VALUES ($1, $2, $3, $4)
 ON CONFLICT (telegram_id) DO UPDATE SET
-  first_name = EXCLUDED.first_name,
-  last_name = EXCLUDED.last_name,
-  username = EXCLUDED.username,
+  first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), users.first_name),
+  last_name = COALESCE(EXCLUDED.last_name, users.last_name),
+  username = COALESCE(EXCLUDED.username, users.username),
   updated_at = now()
 RETURNING telegram_id, first_name, last_name, username, created_at, updated_at;
 `

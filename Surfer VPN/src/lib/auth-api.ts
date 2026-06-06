@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/api";
 import { clearAccessToken, setAccessToken } from "@/lib/auth-store";
+import { saveTelegramProfile } from "@/lib/tg-profile";
 import { getWebApp } from "@/lib/telegram";
 
 type TokenResponse = {
@@ -44,6 +45,7 @@ export async function sessionFromTelegramWebApp(): Promise<TokenResponse> {
 export async function sessionFromTelegramWidget(
   widgetUser: Record<string, unknown>
 ): Promise<TokenResponse> {
+  saveTelegramProfile(widgetUser);
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/session/widget`, {
     method: "POST",
     credentials: "include",

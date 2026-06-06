@@ -1,3 +1,5 @@
+import { buildHappUrl } from "@/lib/constants";
+import { isTelegramMiniApp } from "@/lib/runtime";
 import type {
   ColorScheme,
   TelegramThemeParams,
@@ -99,6 +101,29 @@ export function openLink(url: string): void {
     return;
   }
   window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/**
+ * Open VPN config in Happ.
+ * Web cabinet: direct happ:// (works in mobile/desktop browsers).
+ * Telegram Mini App: bridge page — WebView blocks custom schemes via location.assign.
+ */
+export function openHappUrl(vpnKey: string): void {
+  const happUrl = buildHappUrl(vpnKey);
+  if (!happUrl || typeof window === "undefined") return;
+
+  if (isTelegramMiniApp()) {
+    const bridge = `${window.location.origin}/open-happ?url=${encodeURIComponent(happUrl)}`;
+    const wa = getWebApp();
+    if (wa) {
+      wa.openLink(bridge);
+      return;
+    }
+    window.location.assign(bridge);
+    return;
+  }
+
+  window.location.assign(happUrl);
 }
 
 /** Fire light haptic feedback (no-op outside Telegram). */

@@ -138,7 +138,9 @@ func (h *Handlers) UserMe(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
 		return
 	}
-	_, _ = h.Users.UpsertUser(c.Request.Context(), profileFromTelegram(tg))
+	if tg.FirstName != "" || tg.LastName != "" || tg.Username != "" {
+		_, _ = h.Users.UpsertUser(c.Request.Context(), profileFromTelegram(tg))
+	}
 	prof, err := h.Users.GetProfile(c.Request.Context(), tg.ID)
 	if err != nil {
 		log.Printf("[user/me] telegram_id=%d err=%v", tg.ID, err)

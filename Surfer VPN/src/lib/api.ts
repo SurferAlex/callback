@@ -2,6 +2,7 @@ import type { User } from "@/types";
 import { MOCK_USER, daysUntil } from "@/lib/mock-data";
 import { clearAccessToken, getAccessToken } from "@/lib/auth-store";
 import { isTelegramMiniApp } from "@/lib/runtime";
+import { readStoredTelegramProfile } from "@/lib/tg-profile";
 import { getTelegramUser, getWebApp } from "@/lib/telegram";
 
 export const API_BASE_URL =
@@ -100,14 +101,30 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
   return body as T;
 }
 
+function resolveFirstName(data: ApiUserMe): string {
+  const tg = getTelegramUser();
+  const stored = readStoredTelegramProfile();
+
+  if (isTelegramMiniApp() && tg?.first_name?.trim()) {
+    return tg.first_name.trim();
+  }
+  const apiFirst = data.firstName?.trim();
+  if (apiFirst && apiFirst !== "Пользователь") return apiFirst;
+  if (stored?.first_name?.trim()) return stored.first_name.trim();
+  if (stored?.username?.trim()) return stored.username.trim();
+  if (data.username?.trim()) return data.username.trim();
+  return apiFirst || tg?.first_name?.trim() || "Пользователь";
+}
+
 function mapApiUser(data: ApiUserMe): User {
   const tg = getTelegramUser();
+  const stored = readStoredTelegramProfile();
   const expiresAt = data.subscription.expiresAt || new Date().toISOString();
   return {
     telegramId: data.telegramId,
-    firstName: data.firstName || tg?.first_name || "Пользователь",
-    lastName: data.lastName ?? tg?.last_name,
-    username: data.username ?? tg?.username,
+    firstName: resolveFirstName(data),
+    lastName: data.lastName ?? tg?.last_name ?? stored?.last_name,
+    username: data.username ?? tg?.username ?? stored?.username,
     photoUrl: tg?.photo_url,
     vpnKey: data.vpnKey || "",
     subscription: {
