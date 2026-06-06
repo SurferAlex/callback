@@ -1,5 +1,6 @@
 import { Ic } from "@/components/surf/icons";
 import { SymbolLogo } from "@/components/surf/logos";
+import { BRAND } from "@/lib/constants";
 import { Waves } from "@/components/surf/Waves";
 
 export function Hero() {
@@ -17,7 +18,7 @@ export function Hero() {
             <span className="brandmark-badge">
               <SymbolLogo className="brandmark-symbol" />
             </span>
-            <span className="brandmark-name">Surfer&nbsp;VPN</span>
+            <span className="brandmark-name">{BRAND.name.replace(" ", "\u00a0")}</span>
           </div>
           <h1 className="hero-slogan">
             Свобода

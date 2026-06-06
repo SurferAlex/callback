@@ -8,6 +8,7 @@ import { InstallGrid } from "@/components/surf/InstallGrid";
 import { Toast } from "@/components/surf/Toast";
 import { Splash } from "@/components/surf/Splash";
 import { useUser } from "@/hooks";
+import { BRAND } from "@/lib/constants";
 import { refreshVpnKey } from "@/lib/api";
 import { isTelegramMiniApp } from "@/lib/runtime";
 
@@ -16,7 +17,7 @@ interface ToastState {
   msg: string;
 }
 
-/** Surfer VPN home screen. Mirrors the design's `App` component. */
+/** Surf VPN home screen. Mirrors the design's `App` component. */
 export function HomePage() {
   const { user, loading: dataLoading, error: userError, refetch } = useUser();
   const [vpnKeyOverride, setVpnKeyOverride] = useState<string | null>(null);
@@ -108,7 +109,7 @@ export function HomePage() {
           )}
           <InstallGrid />
           <footer className="foot">
-            Surf VPN · быстрый и свободный интернет
+            {BRAND.name} · быстрый и свободный интернет
           </footer>
         </main>
       </div>

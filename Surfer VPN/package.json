@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Surfer VPN — Telegram Mini App. Свобода без границ.",
+  "description": "Surf VPN — Telegram Mini App. Свобода без границ.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

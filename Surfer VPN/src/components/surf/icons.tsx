@@ -1,4 +1,4 @@
-// Surfer VPN — icon set. Simple geometric glyphs only (no brand logos).
+// Surf VPN — icon set. Simple geometric glyphs only (no brand logos).
 
 type IconProps = { size?: number; color?: string };
 

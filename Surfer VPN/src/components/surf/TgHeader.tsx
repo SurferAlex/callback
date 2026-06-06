@@ -1,4 +1,5 @@
 import { Ic } from "@/components/surf/icons";
+import { BRAND } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTelegramMiniApp } from "@/lib/runtime";
 import { getWebApp } from "@/lib/telegram";
@@ -23,7 +24,7 @@ export function TgHeader() {
         <span className="tg-iconbtn tg-iconbtn-spacer" />
       )}
       <div className="tg-title">
-        <span className="tg-title-main">Surfer VPN</span>
+        <span className="tg-title-main">{BRAND.name}</span>
         <span className="tg-title-sub">{sub}</span>
       </div>
       {mode === "web" ? (

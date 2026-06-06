@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Waves } from "@/components/surf/Waves";
 import { useAuth } from "@/contexts/AuthContext";
 import { sessionFromTelegramWidget } from "@/lib/auth-api";
+import { BRAND } from "@/lib/constants";
 
 const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? "";
 
@@ -63,7 +64,7 @@ export function LoginPage() {
     <div className="screen login-screen">
       <Waves />
       <main className="login-card page">
-        <h1 className="login-title">🏄 Surf VPN</h1>
+        <h1 className="login-title">🏄 {BRAND.name}</h1>
         <p className="login-sub">
           Войдите через Telegram, чтобы открыть личный кабинет в браузере.
         </p>
