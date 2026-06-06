@@ -1,0 +1,15 @@
+{
+    "name": "Surf VPN",
+    "short_name": "Surf VPN",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#e0f2fe",
+    "theme_color": "#e0f2fe",
+    "icons": [
+      {
+        "src": "/images/logo-symbol.svg",
+        "sizes": "any",
+        "type": "image/svg+xml"
+      }
+    ]
+  }
