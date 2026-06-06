@@ -4,8 +4,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -70,9 +72,39 @@ func VerifyWidget(botToken string, fields map[string]string, maxAge time.Duratio
 }
 
 func WidgetFieldsFromMap(m map[string]interface{}) map[string]string {
-	out := make(map[string]string)
+	out := make(map[string]string, len(m))
 	for k, v := range m {
-		out[k] = fmt.Sprint(v)
+		out[k] = widgetFieldString(v)
 	}
 	return out
+}
+
+// widgetFieldString formats JSON-decoded widget values the same way Telegram signs them.
+// encoding/json decodes numbers as float64; fmt.Sprint can emit scientific notation and break hash checks.
+func widgetFieldString(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	switch x := v.(type) {
+	case string:
+		return x
+	case float64:
+		if math.IsNaN(x) || math.IsInf(x, 0) {
+			return ""
+		}
+		if x == math.Trunc(x) && x >= math.MinInt64 && x <= math.MaxInt64 {
+			return strconv.FormatInt(int64(x), 10)
+		}
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	case float32:
+		return widgetFieldString(float64(x))
+	case int:
+		return strconv.Itoa(x)
+	case int64:
+		return strconv.FormatInt(x, 10)
+	case json.Number:
+		return x.String()
+	default:
+		return fmt.Sprint(v)
+	}
 }
