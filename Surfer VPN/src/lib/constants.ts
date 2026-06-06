@@ -2,7 +2,7 @@ import type { Platform } from "@/types";
 
 /** Brand strings — single source of truth for copy. */
 export const BRAND = {
-  name: "Surfer VPN",
+  name: "Surf VPN",
   slogan: "Свобода без границ",
   subtitle: "Быстрый и безопасный интернет для тебя",
 } as const;
