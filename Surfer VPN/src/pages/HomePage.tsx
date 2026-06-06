@@ -108,7 +108,7 @@ export function HomePage() {
           )}
           <InstallGrid />
           <footer className="foot">
-            Surfer VPN · быстрый и свободный интернет
+            Surf VPN · быстрый и свободный интернет
           </footer>
         </main>
       </div>
