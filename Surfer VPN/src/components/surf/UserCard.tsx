@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { SubscriptionStatus, User } from "@/types";
+import { useSubscriptionCountdown } from "@/hooks/use-subscription-countdown";
 import { userAvatarLetter, userDisplayName } from "@/lib/user-display";
+import { pad2, subscriptionProgressPercent } from "@/lib/subscription-time";
 import { formatDate, pluralize } from "@/lib/utils";
 import { Ic } from "@/components/surf/icons";
 
@@ -47,8 +49,18 @@ interface UserCardProps {
 }
 
 export function UserCard({ user }: UserCardProps) {
-  const left = user.subscription.daysLeft;
   const displayName = userDisplayName(user);
+  const countdown = useSubscriptionCountdown(user.subscription.expiresAt);
+  const progress = subscriptionProgressPercent(
+    user.subscription.startsAt,
+    user.subscription.expiresAt,
+    countdown.totalMs
+  );
+
+  const countdownLine = countdown.expired
+    ? "Подписка завершена"
+    : `${pluralize(countdown.days, ["день", "дня", "дней"])} · ${pad2(countdown.hours)}:${pad2(countdown.minutes)}:${pad2(countdown.seconds)}`;
+
   return (
     <section className="card user-card">
       <div className="user-top">
@@ -63,11 +75,12 @@ export function UserCard({ user }: UserCardProps) {
       </div>
 
       <div className="days-banner">
-        <div className="days-num">{left}</div>
+        <div className="days-num">{countdown.expired ? 0 : countdown.days}</div>
         <div className="days-text">
-          <div>{pluralize(left, ["день", "дня", "дней"])} до окончания</div>
+          <div className="days-countdown">{countdownLine}</div>
+          <div className="days-sub">до окончания подписки</div>
           <div className="days-bar">
-            <span style={{ width: Math.min(100, (left / 90) * 100) + "%" }}></span>
+            <span style={{ width: progress + "%" }}></span>
           </div>
         </div>
       </div>

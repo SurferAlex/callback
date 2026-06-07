@@ -6,8 +6,12 @@ export interface Subscription {
   status: SubscriptionStatus;
   /** Human-readable plan name, e.g. "Premium". */
   plan: string;
+  /** ISO-8601 subscription start (Control Plane). */
+  startsAt?: string;
   /** ISO-8601 date string of when the subscription ends. */
   expiresAt: string;
+  /** Seconds until expiration (snapshot from API; UI counts down from expiresAt). */
+  remainingSeconds?: number;
   /** Number of whole days remaining until expiration (>= 0). */
   daysLeft: number;
   /** Whether the subscription auto-renews. */

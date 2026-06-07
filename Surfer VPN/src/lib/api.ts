@@ -21,7 +21,9 @@ type ApiUserMe = {
   subscription: {
     status: string;
     plan: string;
+    startsAt?: string;
     expiresAt: string;
+    remainingSeconds?: number;
     daysLeft: number;
     autoRenew: boolean;
   };
@@ -137,7 +139,9 @@ function mapApiUser(data: ApiUserMe): User {
               ? "none"
               : "expired",
       plan: data.subscription.plan || "—",
+      startsAt: data.subscription.startsAt,
       expiresAt,
+      remainingSeconds: data.subscription.remainingSeconds,
       daysLeft: data.subscription.daysLeft ?? daysUntil(expiresAt),
       autoRenew: data.subscription.autoRenew ?? false,
     },

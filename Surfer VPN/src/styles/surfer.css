@@ -146,6 +146,8 @@ body{
 .days-banner{display:flex;align-items:center;gap:14px;padding:15px 16px;border-radius:18px;
   background:linear-gradient(120deg,#eaf7ff 0%,#e6fbfa 100%);
   border:1px solid rgba(34,211,238,.22);margin-bottom:14px}
+.days-countdown{font-size:15px;font-weight:700;color:var(--ink);line-height:1.35}
+.days-sub{font-size:12.5px;font-weight:600;color:var(--muted);margin-top:3px}
 .days-num{font-size:38px;font-weight:800;line-height:1;
   background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .days-text{font-size:13px;font-weight:600;color:var(--ink-2);flex:1}

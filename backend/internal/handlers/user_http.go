@@ -29,11 +29,13 @@ type UserMeResponse struct {
 }
 
 type SubscriptionView struct {
-	Status    string `json:"status"`
-	Plan      string `json:"plan"`
-	ExpiresAt string `json:"expiresAt"`
-	DaysLeft  int    `json:"daysLeft"`
-	AutoRenew bool   `json:"autoRenew"`
+	Status           string `json:"status"`
+	Plan             string `json:"plan"`
+	StartsAt         string `json:"startsAt,omitempty"`
+	ExpiresAt        string `json:"expiresAt"`
+	RemainingSeconds int64  `json:"remainingSeconds"`
+	DaysLeft         int    `json:"daysLeft"`
+	AutoRenew        bool   `json:"autoRenew"`
 }
 
 type ServerView struct {
@@ -87,33 +89,23 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 	if p.Client != nil {
 		resp.Server.ID = p.Client.ServerID
 	}
-	// Expiry/days follow vpn_clients.key_expires_at (synced from 3x-ui panel on /me and before config refresh).
-	if p.Client != nil && p.Client.KeyExpiresAt.After(time.Now()) {
-		expiresAt := p.Client.KeyExpiresAt.UTC()
+	// Subscription UI: Control Plane PostgreSQL subscriptions.ends_at only (not 3x-ui).
+	if p.Subscription != nil {
+		expiresAt := p.Subscription.EndsAt.UTC()
+		resp.Subscription.Plan = p.Subscription.PlanLabel
+		resp.Subscription.StartsAt = p.Subscription.StartsAt.UTC().Format(time.RFC3339)
 		resp.Subscription.ExpiresAt = expiresAt.Format(time.RFC3339)
-		resp.Subscription.DaysLeft = daysLeft(expiresAt)
-		if p.Subscription != nil {
+		if expiresAt.After(time.Now()) {
 			if p.Subscription.PlanCode == "trial" {
 				resp.Subscription.Status = "trial"
 			} else {
 				resp.Subscription.Status = "active"
 			}
-			resp.Subscription.Plan = p.Subscription.PlanLabel
+			resp.Subscription.DaysLeft = daysLeft(expiresAt)
+			resp.Subscription.RemainingSeconds = remainingSeconds(expiresAt)
 		} else {
-			resp.Subscription.Status = "active"
-			resp.Subscription.Plan = "VPN"
+			resp.Subscription.Status = "expired"
 		}
-	} else if p.Subscription != nil && p.Subscription.EndsAt.After(time.Now()) {
-		if p.Subscription.PlanCode == "trial" {
-			resp.Subscription.Status = "trial"
-		} else {
-			resp.Subscription.Status = "active"
-		}
-		resp.Subscription.Plan = p.Subscription.PlanLabel
-		resp.Subscription.ExpiresAt = p.Subscription.EndsAt.UTC().Format(time.RFC3339)
-		resp.Subscription.DaysLeft = daysLeft(p.Subscription.EndsAt)
-	} else {
-		resp.Subscription.Status = "none"
 	}
 	if p.Access != nil {
 		resp.VpnKey = p.Access.VLESSURI
@@ -134,6 +126,14 @@ func daysLeft(t time.Time) int {
 		return 0
 	}
 	return int((ms + 24*time.Hour - 1) / (24 * time.Hour))
+}
+
+func remainingSeconds(t time.Time) int64 {
+	ms := t.Sub(time.Now())
+	if ms <= 0 {
+		return 0
+	}
+	return int64(ms / time.Second)
 }
 
 func (h *Handlers) UserMe(c *gin.Context) {
