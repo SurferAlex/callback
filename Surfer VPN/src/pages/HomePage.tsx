@@ -48,22 +48,12 @@ export function HomePage() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(
       () => setToast((t) => ({ ...t, show: false })),
-      2200
+      2600
     );
   };
 
   const displayConfig =
     configOverride ?? (user ? userConfigLink(user) : "");
-
-  const copyKey = async () => {
-    if (!displayConfig) return;
-    try {
-      await navigator.clipboard.writeText(displayConfig);
-    } catch {
-      /* clipboard may be blocked in sandbox */
-    }
-    fireToast("Ссылка подписки скопирована");
-  };
 
   // Splash only on first load (not on silent refetch after «Обновить конфиг»).
   const loading = (!minElapsed || (dataLoading && !user));
@@ -83,7 +73,6 @@ export function HomePage() {
           {user && (
             <Actions
               vpnKey={displayConfig}
-              onCopy={copyKey}
               refreshing={refreshing}
               onRefresh={async () => {
                 if (refreshing) return;
@@ -92,7 +81,7 @@ export function HomePage() {
                   const link = await refreshVpnKey();
                   setConfigOverride(link);
                   refetch();
-                  fireToast("Конфиг обновлён");
+                  fireToast("✅ Конфиг успешно обновлён");
                 } catch (err) {
                   const msg =
                     err instanceof Error && err.message

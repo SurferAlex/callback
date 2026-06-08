@@ -5,6 +5,10 @@ export const BRAND = {
   name: "Surf VPN",
   slogan: "Свобода без границ",
   subtitle: "Быстрый и безопасный интернет для тебя",
+  /** Happ subscription profile title (mirrors backend brand.SubscriptionProfileTitle). */
+  happSubscriptionTitle: "🌊 Surf VPN",
+  /** Happ VLESS node label (mirrors backend brand.VLESSNodeLabel). */
+  happServerLabel: "🐋 Ocean Wave",
 } as const;
 
 /** API base URL (Happ bridge for Mini App). */

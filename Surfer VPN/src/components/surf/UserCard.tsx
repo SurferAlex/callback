@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { SubscriptionStatus, User } from "@/types";
 import { useSubscriptionCountdown } from "@/hooks/use-subscription-countdown";
 import { userAvatarLetter, userDisplayName } from "@/lib/user-display";
+import { BRAND } from "@/lib/constants";
 import { pad2, subscriptionProgressPercent } from "@/lib/subscription-time";
 import { formatDate, pluralize } from "@/lib/utils";
 import { Ic } from "@/components/surf/icons";
@@ -99,13 +100,8 @@ export function UserCard({ user }: UserCardProps) {
         <InfoRow
           icon={<Ic.Pin />}
           label="Сервер"
-          value={`${user.server.country}, ${user.server.city}`}
+          value={BRAND.happServerLabel}
           accent
-        />
-        <InfoRow
-          icon={<Ic.Hash />}
-          label="Telegram ID"
-          value={user.telegramId}
         />
       </div>
     </section>

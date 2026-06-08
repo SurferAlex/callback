@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"api-vpn/internal/brand"
 	"api-vpn/internal/model"
 	"api-vpn/internal/xui"
 	"context"
@@ -101,7 +102,7 @@ func (uc *XUIAccess) Provision(ctx context.Context, clientUUID uuid.UUID) (model
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
-	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), displayName, ss, sx.fp, sx.spiderX, sx.flow)
+	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), brand.VLESSNodeLabel, ss, sx.fp, sx.spiderX, sx.flow)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
@@ -146,7 +147,7 @@ func (uc *XUIAccess) RebuildVLESSURI(ctx context.Context, client model.VPNClient
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
-	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), displayName, ss, sx.fp, sx.spiderX, sx.flow)
+	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), brand.VLESSNodeLabel, ss, sx.fp, sx.spiderX, sx.flow)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}

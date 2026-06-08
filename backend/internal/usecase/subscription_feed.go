@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"api-vpn/internal/brand"
 	"api-vpn/internal/model"
 )
 
@@ -68,10 +69,11 @@ func (s *UserService) RenderSubscriptionFeed(ctx context.Context, token string) 
 	encoded := base64.StdEncoding.EncodeToString([]byte(payload))
 
 	headers := map[string]string{
-		"Content-Disposition":                `attachment; filename="surf-vpn.txt"`,
-		"Profile-Update-Interval":            "12",
-		"Subscription-Userinfo":              subscriptionUserinfo(sub.EndsAt),
-		"Cache-Control":                      "no-store",
+		"Content-Disposition":       `attachment; filename="surf-vpn.txt"`,
+		"Profile-Title":             brand.SubscriptionProfileTitle,
+		"Profile-Update-Interval":   "12",
+		"Subscription-Userinfo":     subscriptionUserinfo(sub.EndsAt),
+		"Cache-Control":             "no-store",
 	}
 
 	return SubscriptionFeed{

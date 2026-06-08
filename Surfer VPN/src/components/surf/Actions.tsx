@@ -3,12 +3,10 @@ import { Ic } from '@/components/surf/icons';
 
 export function Actions({
   vpnKey,
-  onCopy,
   onRefresh,
   refreshing,
 }: {
   vpnKey: string;
-  onCopy: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
 }) {
@@ -27,12 +25,9 @@ export function Actions({
         </span>
         <span className="btn-primary-arrow"><Ic.Arrow /></span>
       </button>
-      <button className="btn-ghost" onClick={onCopy}>
-        <Ic.Copy /><span>Скопировать ссылку</span>
-      </button>
       {onRefresh && (
         <button className="btn-ghost" onClick={onRefresh} disabled={refreshing}>
-          <Ic.Refresh /><span>{refreshing ? "Обновляем…" : "Обновить конфиг"}</span>
+          <Ic.Refresh /><span>{refreshing ? "🔄 Обновляем…" : "🔄 Обновить конфиг"}</span>
         </button>
       )}
     </section>
