@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"api-vpn/internal/model"
 )
 
 // SubscriptionFeed is the Happ / V2Ray-compatible subscription payload.
@@ -78,8 +80,9 @@ func (s *UserService) RenderSubscriptionFeed(ctx context.Context, token string) 
 	}, nil
 }
 
-// collectSubscriptionURIs gathers VLESS URIs from Control Plane PG (xui_access).
-// Prepared for multiple VPN servers: one URI per active client record.
+// collectSubscriptionURIs returns fresh VLESS URIs for the active client.
+// Each subscription fetch rebuilds the URI from 3x-ui inbound + vpn_servers settings
+// so Happ "update subscription" picks up fingerprint and panel changes without a new UUID.
 func (s *UserService) collectSubscriptionURIs(ctx context.Context, telegramID int64) ([]string, error) {
 	client, err := s.activeClient(ctx, telegramID)
 	if err != nil {
@@ -89,15 +92,14 @@ func (s *UserService) collectSubscriptionURIs(ctx context.Context, telegramID in
 		return nil, fmt.Errorf("xui access not configured")
 	}
 
-	acc, err := s.xui.Get(ctx, client.ClientUUID)
-	if err == nil && strings.TrimSpace(acc.VLESSURI) != "" {
-		return []string{strings.TrimSpace(acc.VLESSURI)}, nil
-	}
-	if !errors.Is(err, ErrNotFound) {
+	var acc model.XUIAccess
+	if _, err := s.xui.Get(ctx, client.ClientUUID); errors.Is(err, ErrNotFound) {
+		acc, err = s.xui.Provision(ctx, client.ClientUUID)
+	} else if err != nil {
 		return nil, err
+	} else {
+		acc, err = s.xui.RebuildVLESSURI(ctx, client)
 	}
-
-	acc, err = s.xui.Provision(ctx, client.ClientUUID)
 	if err != nil {
 		return nil, err
 	}

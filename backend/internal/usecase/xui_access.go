@@ -114,6 +114,51 @@ func (uc *XUIAccess) Provision(ctx context.Context, clientUUID uuid.UUID) (model
 	})
 }
 
+// RebuildVLESSURI refreshes the stored VLESS link from live inbound settings and
+// vpn_servers params (fingerprint, flow, etc.) without rotating the client UUID.
+func (uc *XUIAccess) RebuildVLESSURI(ctx context.Context, client model.VPNClient) (model.XUIAccess, error) {
+	sx, err := uc.registry.forServer(ctx, client.ServerID)
+	if err != nil {
+		return model.XUIAccess{}, err
+	}
+
+	displayName := client.ClientUUID.String()
+	if client.Note != nil {
+		if n := strings.TrimSpace(*client.Note); n != "" {
+			displayName = n
+		}
+	}
+	xuiEmail := makeXUIEmail(displayName, client.ClientUUID.String())
+	inboundID := sx.inbound
+
+	if a, err := uc.repo.GetByClientUUID(ctx, client.ClientUUID); err == nil {
+		if strings.TrimSpace(a.XUIClientEmail) != "" {
+			xuiEmail = strings.TrimSpace(a.XUIClientEmail)
+		}
+		if a.InboundID > 0 {
+			inboundID = a.InboundID
+		}
+	} else if !errors.Is(err, ErrNotFound) {
+		return model.XUIAccess{}, err
+	}
+
+	inb, ss, err := sx.client.GetInbound(ctx, inboundID)
+	if err != nil {
+		return model.XUIAccess{}, err
+	}
+	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), displayName, ss, sx.fp, sx.spiderX, sx.flow)
+	if err != nil {
+		return model.XUIAccess{}, err
+	}
+
+	return uc.repo.Upsert(ctx, model.UpsertXUIAccessParams{
+		ClientUUID:     client.ClientUUID,
+		InboundID:      inboundID,
+		XUIClientEmail: xuiEmail,
+		VLESSURI:       uri,
+	})
+}
+
 var xuiEmailAllowed = regexp.MustCompile(`[^a-zA-Z0-9._-]+`)
 
 func makeXUIEmail(displayName string, uuidStr string) string {
