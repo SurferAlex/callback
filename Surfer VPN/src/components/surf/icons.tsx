@@ -164,21 +164,28 @@ export const Ic = {
   Refresh: ({ size = 20, color = '#2563EB' }: IconProps) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M20 8v-2a8 8 0 10-8 8"
+        d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
         stroke={color}
         strokeWidth="1.85"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M4 16v2a8 8 0 008-8"
+        d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"
         stroke={color}
         strokeWidth="1.85"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M20 4h-4M20 4l-2.5 2.5M4 20h4M4 20l2.5-2.5"
+        d="M3 8v4h4"
+        stroke={color}
+        strokeWidth="1.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M21 16v-4h-4"
         stroke={color}
         strokeWidth="1.85"
         strokeLinecap="round"
