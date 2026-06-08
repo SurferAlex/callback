@@ -191,6 +191,18 @@ body{
 .btn-ghost:hover{background:#f4f9ff;border-color:rgba(37,99,235,.4)}
 .btn-ghost:active{transform:scale(.98)}
 
+.btn-refresh{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  padding:15px 22px;border-radius:999px;font-family:var(--font);font-size:16px;font-weight:700;
+  letter-spacing:-.15px;color:var(--blue);background:#fff;cursor:pointer;
+  border:1.5px solid rgba(37,99,235,.38);white-space:nowrap;
+  transition:background .15s, border-color .15s, transform .15s, opacity .15s}
+.btn-refresh:hover:not(:disabled){background:#f8fbff;border-color:rgba(37,99,235,.55)}
+.btn-refresh:active:not(:disabled){transform:scale(.985)}
+.btn-refresh:disabled{opacity:.72;cursor:default}
+.btn-refresh-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0}
+.btn-refresh.is-loading .btn-refresh-icon{animation:refresh-spin .85s linear infinite}
+@keyframes refresh-spin{to{transform:rotate(360deg)}}
+
 /* install */
 .install{margin-top:26px}
 .section-head{padding:0 4px 12px}

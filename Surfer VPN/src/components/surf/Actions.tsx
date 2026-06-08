@@ -26,8 +26,16 @@ export function Actions({
         <span className="btn-primary-arrow"><Ic.Arrow /></span>
       </button>
       {onRefresh && (
-        <button className="btn-ghost" onClick={onRefresh} disabled={refreshing}>
-          <Ic.Refresh /><span>{refreshing ? "🔄 Обновляем…" : "🔄 Обновить конфиг"}</span>
+        <button
+          type="button"
+          className={"btn-refresh" + (refreshing ? " is-loading" : "")}
+          onClick={onRefresh}
+          disabled={refreshing}
+        >
+          <span className="btn-refresh-icon" aria-hidden="true">
+            <Ic.Refresh size={22} />
+          </span>
+          <span>{refreshing ? "Обновляем…" : "Обновить конфиг"}</span>
         </button>
       )}
     </section>

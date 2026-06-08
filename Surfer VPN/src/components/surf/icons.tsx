@@ -162,11 +162,25 @@ export const Ic = {
     </svg>
   ),
   Refresh: ({ size = 20, color = '#2563EB' }: IconProps) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M20 12a8 8 0 10-2.3-5.7M20 4v6h-6"
+        d="M20 8v-2a8 8 0 10-8 8"
         stroke={color}
-        strokeWidth="1.9"
+        strokeWidth="1.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M4 16v2a8 8 0 008-8"
+        stroke={color}
+        strokeWidth="1.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M20 4h-4M20 4l-2.5 2.5M4 20h4M4 20l2.5-2.5"
+        stroke={color}
+        strokeWidth="1.85"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

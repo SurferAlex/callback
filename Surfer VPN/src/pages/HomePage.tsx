@@ -81,7 +81,7 @@ export function HomePage() {
                   const link = await refreshVpnKey();
                   setConfigOverride(link);
                   refetch();
-                  fireToast("✅ Конфиг успешно обновлён");
+                  fireToast("Конфиг успешно обновлён");
                 } catch (err) {
                   const msg =
                     err instanceof Error && err.message
