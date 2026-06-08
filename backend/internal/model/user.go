@@ -3,12 +3,13 @@ package model
 import "time"
 
 type User struct {
-	TelegramID int64
-	FirstName  string
-	LastName   *string
-	Username   *string
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	TelegramID        int64
+	FirstName         string
+	LastName          *string
+	Username          *string
+	SubscriptionToken *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }
 
 type UpsertUserParams struct {

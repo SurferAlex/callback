@@ -43,6 +43,8 @@ var PlanLabels = map[string]string{
 type UsersRepo interface {
 	Upsert(ctx context.Context, p model.UpsertUserParams) (model.User, error)
 	GetByTelegramID(ctx context.Context, telegramID int64) (model.User, error)
+	GetBySubscriptionToken(ctx context.Context, token string) (model.User, error)
+	EnsureSubscriptionToken(ctx context.Context, telegramID int64) (string, error)
 }
 
 type SubscriptionsRepo interface {
@@ -67,9 +69,10 @@ type UserService struct {
 	clients       *VPNClients
 	servers       *VPNServers
 	xui           *XUIAccess
-	defaultServer string
-	defaultMaxIPs int
-	now           func() time.Time
+	defaultServer       string
+	defaultMaxIPs       int
+	subscriptionBaseURL string
+	now                 func() time.Time
 }
 
 func NewUserService(
@@ -81,6 +84,7 @@ func NewUserService(
 	xui *XUIAccess,
 	defaultServer string,
 	defaultMaxIPs int,
+	subscriptionBaseURL string,
 ) *UserService {
 	if defaultMaxIPs <= 0 {
 		defaultMaxIPs = 2
@@ -95,9 +99,10 @@ func NewUserService(
 		clients:       clients,
 		servers:       servers,
 		xui:           xui,
-		defaultServer: defaultServer,
-		defaultMaxIPs: defaultMaxIPs,
-		now:           time.Now,
+		defaultServer:       defaultServer,
+		defaultMaxIPs:       defaultMaxIPs,
+		subscriptionBaseURL: strings.TrimRight(strings.TrimSpace(subscriptionBaseURL), "/"),
+		now:                 time.Now,
 	}
 }
 
@@ -120,6 +125,11 @@ func (s *UserService) GetProfile(ctx context.Context, telegramID int64) (UserPro
 	sub, err := s.subs.GetActiveForUser(ctx, telegramID, s.now())
 	if err == nil {
 		out.Subscription = &sub
+		if sub.EndsAt.After(s.now()) {
+			if token, terr := s.users.EnsureSubscriptionToken(ctx, telegramID); terr == nil {
+				out.User.SubscriptionToken = &token
+			}
+		}
 	}
 
 	client, err := s.clients.GetActiveRecordByTelegramUserID(ctx, telegramID)
@@ -210,6 +220,7 @@ func (s *UserService) ActivateTrial(ctx context.Context, telegramID int64, profi
 		return UserProfile{}, err
 	}
 
+	_, _ = s.users.EnsureSubscriptionToken(ctx, telegramID)
 	u, _ := s.users.GetByTelegramID(ctx, telegramID)
 	sub, _ := s.subs.GetActiveForUser(ctx, telegramID, s.now())
 	return UserProfile{User: u, Subscription: &sub, Client: &client, Access: &access}, nil
@@ -302,6 +313,7 @@ func (s *UserService) MockActivate(ctx context.Context, telegramID int64, planCo
 		return UserProfile{}, err
 	}
 
+	_, _ = s.users.EnsureSubscriptionToken(ctx, telegramID)
 	u, _ := s.users.GetByTelegramID(ctx, telegramID)
 	sub, _ := s.subs.GetActiveForUser(ctx, telegramID, s.now())
 	return UserProfile{User: u, Subscription: &sub, Client: &client, Access: &access}, nil

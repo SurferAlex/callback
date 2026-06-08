@@ -23,8 +23,9 @@ type UserMeResponse struct {
 	FirstName    string             `json:"firstName"`
 	LastName     *string            `json:"lastName,omitempty"`
 	Username     *string            `json:"username,omitempty"`
-	VpnKey       string             `json:"vpnKey"`
-	Subscription SubscriptionView   `json:"subscription"`
+	VpnKey          string           `json:"vpnKey"`
+	SubscriptionURL string           `json:"subscriptionUrl,omitempty"`
+	Subscription    SubscriptionView `json:"subscription"`
 	Server       ServerView         `json:"server"`
 }
 
@@ -46,8 +47,9 @@ type ServerView struct {
 }
 
 type ConfigResponse struct {
-	VlessURI   string `json:"vlessUri"`
-	ClientUUID string `json:"clientUuid,omitempty"`
+	VlessURI        string `json:"vlessUri"`
+	SubscriptionURL string `json:"subscriptionUrl,omitempty"`
+	ClientUUID      string `json:"clientUuid,omitempty"`
 }
 
 func profileFromTelegram(tg middleware.TelegramIdentity) model.UpsertUserParams {
@@ -66,7 +68,7 @@ func profileFromTelegram(tg middleware.TelegramIdentity) model.UpsertUserParams 
 	}
 }
 
-func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
+func (h *Handlers) toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 	resp := UserMeResponse{
 		TelegramID: p.User.TelegramID,
 		FirstName:  p.User.FirstName,
@@ -110,6 +112,9 @@ func toUserMeResponse(p usecase.UserProfile) UserMeResponse {
 	if p.Access != nil {
 		resp.VpnKey = p.Access.VLESSURI
 	}
+	if url := h.subscriptionURLFromProfile(p); url != "" {
+		resp.SubscriptionURL = url
+	}
 	if resp.FirstName == "" {
 		if resp.Username != nil && strings.TrimSpace(*resp.Username) != "" {
 			resp.FirstName = strings.TrimSpace(*resp.Username)
@@ -136,6 +141,27 @@ func remainingSeconds(t time.Time) int64 {
 	return int64(ms / time.Second)
 }
 
+func (h *Handlers) subscriptionURLFromProfile(p usecase.UserProfile) string {
+	if p.User.SubscriptionToken == nil || strings.TrimSpace(*p.User.SubscriptionToken) == "" {
+		return ""
+	}
+	if p.Subscription == nil || !p.Subscription.EndsAt.After(time.Now()) {
+		return ""
+	}
+	return h.Users.SubscriptionURL(*p.User.SubscriptionToken)
+}
+
+func (h *Handlers) configResponseFromAccess(c *gin.Context, telegramID int64, acc model.XUIAccess) ConfigResponse {
+	resp := ConfigResponse{
+		VlessURI:   acc.VLESSURI,
+		ClientUUID: acc.ClientUUID.String(),
+	}
+	if token, err := h.Users.EnsureSubscriptionToken(c.Request.Context(), telegramID); err == nil {
+		resp.SubscriptionURL = h.Users.SubscriptionURL(token)
+	}
+	return resp
+}
+
 func (h *Handlers) UserMe(c *gin.Context) {
 	tg, ok := middleware.GetTelegram(c)
 	if !ok {
@@ -155,7 +181,7 @@ func (h *Handlers) UserMe(c *gin.Context) {
 		prof.User.TelegramID = tg.ID
 		prof.User.FirstName = tg.FirstName
 	}
-	c.JSON(http.StatusOK, toUserMeResponse(prof))
+	c.JSON(http.StatusOK, h.toUserMeResponse(prof))
 }
 
 func (h *Handlers) UserTrialActivate(c *gin.Context) {
@@ -189,7 +215,7 @@ func (h *Handlers) UserTrialActivate(c *gin.Context) {
 		prof.User.FirstName = tg.FirstName
 	}
 	log.Printf("[trial/activate] telegram_id=%d ok", tg.ID)
-	c.JSON(http.StatusOK, toUserMeResponse(prof))
+	c.JSON(http.StatusOK, h.toUserMeResponse(prof))
 }
 
 func (h *Handlers) UserMockActivate(c *gin.Context) {
@@ -216,7 +242,7 @@ func (h *Handlers) UserMockActivate(c *gin.Context) {
 		}
 		return
 	}
-	c.JSON(http.StatusOK, toUserMeResponse(prof))
+	c.JSON(http.StatusOK, h.toUserMeResponse(prof))
 }
 
 func (h *Handlers) UserGetConfig(c *gin.Context) {
@@ -235,10 +261,7 @@ func (h *Handlers) UserGetConfig(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
-	c.JSON(http.StatusOK, ConfigResponse{
-		VlessURI:   acc.VLESSURI,
-		ClientUUID: acc.ClientUUID.String(),
-	})
+	c.JSON(http.StatusOK, h.configResponseFromAccess(c, tg.ID, acc))
 }
 
 func (h *Handlers) UserRefreshConfig(c *gin.Context) {
@@ -257,8 +280,5 @@ func (h *Handlers) UserRefreshConfig(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
-	c.JSON(http.StatusOK, ConfigResponse{
-		VlessURI:   acc.VLESSURI,
-		ClientUUID: acc.ClientUUID.String(),
-	})
+	c.JSON(http.StatusOK, h.configResponseFromAccess(c, tg.ID, acc))
 }

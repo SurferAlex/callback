@@ -18,8 +18,9 @@ type Config struct {
 	CORSOrigins       string
 	CookieDomain      string
 	CookieSecure      bool
-	DefaultVPNServer  string
-	DefaultMaxIPs     int
+	DefaultVPNServer      string
+	DefaultMaxIPs         int
+	SubscriptionBaseURL   string
 	XUI               XUIConfig
 	OptionalServers   []OptionalVPNServer
 }
@@ -63,8 +64,9 @@ func LoadConfig() Config {
 		CORSOrigins:      getEnv("CORS_ORIGINS", "http://localhost:5173,https://app.surfwave.space"),
 		CookieDomain:     getEnv("COOKIE_DOMAIN", ""),
 		CookieSecure:     getEnv("COOKIE_SECURE", "") == "1",
-		DefaultVPNServer: getEnv("DEFAULT_VPN_SERVER_ID", "default"),
-		DefaultMaxIPs:    maxIPs,
+		DefaultVPNServer:    getEnv("DEFAULT_VPN_SERVER_ID", "default"),
+		DefaultMaxIPs:       maxIPs,
+		SubscriptionBaseURL: getEnv("SUBSCRIPTION_BASE_URL", "https://sub.surfwave.space"),
 		XUI: XUIConfig{
 			BaseURL:      mustEnv("XUI_BASE_URL"),
 			Username:     mustEnv("XUI_USERNAME"),

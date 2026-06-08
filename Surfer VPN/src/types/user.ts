@@ -47,8 +47,10 @@ export interface User {
   username?: string;
   /** Telegram avatar URL (optional). */
   photoUrl?: string;
-  /** Personal VPN access key used to open the client / copy to clipboard. */
+  /** Legacy VLESS URI (backward compatibility). */
   vpnKey: string;
+  /** Personal subscription URL (https://sub.surfwave.space/sub/…). */
+  subscriptionUrl?: string;
   /** Subscription details. */
   subscription: Subscription;
   /** Currently assigned server. */

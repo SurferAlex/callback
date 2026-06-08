@@ -8,7 +8,7 @@ import { InstallGrid } from "@/components/surf/InstallGrid";
 import { Toast } from "@/components/surf/Toast";
 import { Splash } from "@/components/surf/Splash";
 import { useUser } from "@/hooks";
-import { BRAND } from "@/lib/constants";
+import { BRAND, userConfigLink } from "@/lib/constants";
 import { refreshVpnKey } from "@/lib/api";
 import { isTelegramMiniApp } from "@/lib/runtime";
 
@@ -20,7 +20,7 @@ interface ToastState {
 /** Surf VPN home screen. Mirrors the design's `App` component. */
 export function HomePage() {
   const { user, loading: dataLoading, error: userError, refetch } = useUser();
-  const [vpnKeyOverride, setVpnKeyOverride] = useState<string | null>(null);
+  const [configOverride, setConfigOverride] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const [toast, setToast] = useState<ToastState>({ show: false, msg: "" });
@@ -52,16 +52,17 @@ export function HomePage() {
     );
   };
 
-  const displayKey = vpnKeyOverride ?? user?.vpnKey ?? "";
+  const displayConfig =
+    configOverride ?? (user ? userConfigLink(user) : "");
 
   const copyKey = async () => {
-    if (!displayKey) return;
+    if (!displayConfig) return;
     try {
-      await navigator.clipboard.writeText(displayKey);
+      await navigator.clipboard.writeText(displayConfig);
     } catch {
       /* clipboard may be blocked in sandbox */
     }
-    fireToast("Ключ успешно скопирован");
+    fireToast("Ссылка подписки скопирована");
   };
 
   // Splash only on first load (not on silent refetch after «Обновить конфиг»).
@@ -81,15 +82,15 @@ export function HomePage() {
           {user && <UserCard user={user} />}
           {user && (
             <Actions
-              vpnKey={displayKey}
+              vpnKey={displayConfig}
               onCopy={copyKey}
               refreshing={refreshing}
               onRefresh={async () => {
                 if (refreshing) return;
                 setRefreshing(true);
                 try {
-                  const key = await refreshVpnKey();
-                  setVpnKeyOverride(key);
+                  const link = await refreshVpnKey();
+                  setConfigOverride(link);
                   refetch();
                   fireToast("Конфиг обновлён");
                 } catch (err) {

@@ -15,8 +15,12 @@ func (h *Handlers) HappOpen(c *gin.Context) {
 		return
 	}
 
+	lower := strings.ToLower(key)
 	target := key
-	if !strings.HasPrefix(strings.ToLower(key), "happ://") {
+	if strings.HasPrefix(lower, "happ://") {
+		target = key
+	} else {
+		// VLESS key, subscription https:// URL, or plain config string.
 		target = "happ://add/" + key
 	}
 

@@ -18,6 +18,7 @@ type ApiUserMe = {
   lastName?: string;
   username?: string;
   vpnKey: string;
+  subscriptionUrl?: string;
   subscription: {
     status: string;
     plan: string;
@@ -129,6 +130,7 @@ function mapApiUser(data: ApiUserMe): User {
     username: data.username ?? tg?.username ?? stored?.username,
     photoUrl: tg?.photo_url,
     vpnKey: data.vpnKey || "",
+    subscriptionUrl: data.subscriptionUrl,
     subscription: {
       status:
         data.subscription.status === "active"
@@ -177,20 +179,31 @@ export async function getCurrentUser(): Promise<User> {
   return mapApiUser(data);
 }
 
+function pickConfigLink(data: {
+  subscriptionUrl?: string;
+  vlessUri?: string;
+}): string {
+  return data.subscriptionUrl?.trim() || data.vlessUri?.trim() || "";
+}
+
 export async function getVpnKey(): Promise<string> {
   if (USE_MOCK) {
-    return (await getCurrentUser()).vpnKey;
+    const u = await getCurrentUser();
+    return u.subscriptionUrl || u.vpnKey;
   }
-  const data = await apiFetch<{ vlessUri: string }>("/api/v1/user/config");
-  return data.vlessUri;
+  const data = await apiFetch<{ vlessUri: string; subscriptionUrl?: string }>(
+    "/api/v1/user/config"
+  );
+  return pickConfigLink(data);
 }
 
 export async function refreshVpnKey(): Promise<string> {
   if (USE_MOCK) {
     return getVpnKey();
   }
-  const data = await apiFetch<{ vlessUri: string }>("/api/v1/user/config/refresh", {
-    method: "POST",
-  });
-  return data.vlessUri;
+  const data = await apiFetch<{ vlessUri: string; subscriptionUrl?: string }>(
+    "/api/v1/user/config/refresh",
+    { method: "POST" }
+  );
+  return pickConfigLink(data);
 }

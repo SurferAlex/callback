@@ -31,7 +31,7 @@ func SetupServer(db *pgxpool.Pool, cfg config.Config) *gin.Engine {
 	trialsRepo := repository.NewTrialActivationsRepo(db)
 	refreshRepo := repository.NewAuthRefreshRepo(db)
 	authUC := usecase.NewAuthSession(usersRepo, refreshRepo, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
-	usersUC := usecase.NewUserService(usersRepo, subsRepo, trialsRepo, clientsUC, serversUC, xuiUC, cfg.DefaultVPNServer, cfg.DefaultMaxIPs)
+	usersUC := usecase.NewUserService(usersRepo, subsRepo, trialsRepo, clientsUC, serversUC, xuiUC, cfg.DefaultVPNServer, cfg.DefaultMaxIPs, cfg.SubscriptionBaseURL)
 
 	authH := &handlers.AuthHandlers{
 		Auth:         authUC,
@@ -56,6 +56,9 @@ func SetupServer(db *pgxpool.Pool, cfg config.Config) *gin.Engine {
 }
 
 func RegisterRoutes(r *gin.Engine, h *handlers.Handlers, authH *handlers.AuthHandlers, authUC *usecase.AuthSession, cfg config.Config) {
+	// Public subscription feed (sub.surfwave.space → /sub/:token).
+	r.GET("/sub/:token", h.SubscriptionFeed)
+
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/ping", h.Ping)

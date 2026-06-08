@@ -28,7 +28,7 @@ export function Actions({
         <span className="btn-primary-arrow"><Ic.Arrow /></span>
       </button>
       <button className="btn-ghost" onClick={onCopy}>
-        <Ic.Copy /><span>Скопировать ключ</span>
+        <Ic.Copy /><span>Скопировать ссылку</span>
       </button>
       {onRefresh && (
         <button className="btn-ghost" onClick={onRefresh} disabled={refreshing}>

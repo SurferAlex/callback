@@ -14,6 +14,7 @@ export const MOCK_USER: User = {
   photoUrl: undefined,
   vpnKey:
     "vless://7c1f9a2e-4b8d-46a1-9e3c-1d2f5a6b8c90@nl.surfervpn.com:443?type=ws#Surfer",
+  subscriptionUrl: "https://sub.surfwave.space/sub/mock-demo-token",
   subscription: {
     status: "active",
     plan: "Premium",
