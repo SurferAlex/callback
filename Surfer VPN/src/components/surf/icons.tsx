@@ -166,28 +166,21 @@ export const Ic = {
       <path
         d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
         stroke={color}
-        strokeWidth="1.85"
+        strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"
         stroke={color}
-        strokeWidth="1.85"
+        strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M3 8v4h4"
+        d="M3 8v4h4M21 16v-4h-4"
         stroke={color}
-        strokeWidth="1.85"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M21 16v-4h-4"
-        stroke={color}
-        strokeWidth="1.85"
+        strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

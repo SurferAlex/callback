@@ -199,6 +199,9 @@ body{
 .btn-refresh:hover:not(:disabled){background:#f8fbff;border-color:rgba(37,99,235,.55)}
 .btn-refresh:active:not(:disabled){transform:scale(.985)}
 .btn-refresh:disabled{opacity:.72;cursor:default}
+.btn-refresh-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:0}
+.btn-refresh.is-loading .btn-refresh-icon{animation:refresh-spin .9s linear infinite}
+@keyframes refresh-spin{to{transform:rotate(360deg)}}
 
 /* install */
 .install{margin-top:26px}
