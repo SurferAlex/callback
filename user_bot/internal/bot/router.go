@@ -90,7 +90,7 @@ func (r *Router) handleCallback(ctx context.Context, cq *tgbotapi.CallbackQuery)
 	case data == botapp.CBBuyVPN || data == botapp.CBChangePlan:
 		r.Send.EditOrSend(chatID, msgID, botapp.BuyPlansIntroText(), botapp.PlansKeyboard())
 
-	case data == botapp.CBPlan1m, data == botapp.CBPlan3m, data == botapp.CBPlan6m, data == botapp.CBPlan12m:
+	case data == botapp.CBPlan1m, data == botapp.CBPlan2m, data == botapp.CBPlan3m, data == botapp.CBPlan6m, data == botapp.CBPlan12m:
 		code := botapp.PlanFromCallback(data)
 		p, ok := r.Plans[code]
 		if !ok {

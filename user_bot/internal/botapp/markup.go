@@ -72,12 +72,12 @@ func TrialUsedKeyboard() JSONMarkup {
 }
 
 func PlansKeyboard() JSONMarkup {
-	return JSONMarkup{InlineKeyboard: [][]inlineBtn{
-		{cbBtn("1 месяц", CBPlan1m)},
-		{cbBtn("3 месяца", CBPlan3m), cbBtn("6 месяцев", CBPlan6m)},
-		{cbBtn("12 месяцев", CBPlan12m)},
-		BackMainRow(),
-	}}
+	rows := make([][]inlineBtn, 0, len(LoadPlans())+1)
+	for _, p := range LoadPlans() {
+		rows = append(rows, []inlineBtn{cbBtn(p.MenuLabel(), p.CallbackData())})
+	}
+	rows = append(rows, BackMainRow())
+	return JSONMarkup{InlineKeyboard: rows}
 }
 
 func CheckoutKeyboard() JSONMarkup {

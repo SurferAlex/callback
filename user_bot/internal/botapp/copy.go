@@ -57,7 +57,7 @@ func MockSuccessText(plan PlanOffer, expires string, daysLeft int) string {
 func BuyPlansIntroText() string {
 	return `💳 <b>Premium подписка</b>
 
-Выберите срок. Оплата подключается — пока доступен только бесплатный тест на 24 часа.`
+Выберите подходящий срок подписки.`
 }
 
 func CheckoutText(p PlanOffer) string {
@@ -70,11 +70,7 @@ func CheckoutText(p PlanOffer) string {
 💎 Тариф: <b>%s</b>
 💰 К оплате: <b>%d ₽</b>
 
-🔜 Оплата временно недоступна, но может быть предоставленна по
-обращению к @surfervpn_support
-
-VPN-ключ сейчас выдаётся только в разделе
-<b>🎁 Бесплатно на 24 часа</b>.
+🔜 Оплата временно недоступна, но может быть предоставлена по обращению к @surfervpn_support
 
 ━━━━━━━━━━━━━━`, p.Devices, p.Duration, p.PlanName, p.PriceRub)
 }
