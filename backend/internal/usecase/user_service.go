@@ -136,7 +136,7 @@ func (s *UserService) GetProfile(ctx context.Context, telegramID int64) (UserPro
 	if err == nil {
 		out.Client = &client
 		if s.xui != nil {
-			if acc, err := s.xui.Get(ctx, client.ClientUUID); err == nil {
+			if acc, err := s.ensureFreshAccess(ctx, client); err == nil {
 				out.Access = &acc
 			}
 		}
@@ -324,17 +324,14 @@ func (s *UserService) GetConfig(ctx context.Context, telegramID int64) (model.XU
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
+	return s.ensureFreshAccess(ctx, client)
+}
+
+func (s *UserService) ensureFreshAccess(ctx context.Context, client model.VPNClient) (model.XUIAccess, error) {
 	if s.xui == nil {
 		return model.XUIAccess{}, fmt.Errorf("xui access not configured")
 	}
-	acc, err := s.xui.Get(ctx, client.ClientUUID)
-	if err == nil {
-		return acc, nil
-	}
-	if !errors.Is(err, ErrNotFound) {
-		return model.XUIAccess{}, err
-	}
-	return s.xui.Provision(ctx, client.ClientUUID)
+	return s.xui.EnsureFreshURI(ctx, client)
 }
 
 func (s *UserService) activeClient(ctx context.Context, telegramID int64) (model.VPNClient, error) {
@@ -362,52 +359,15 @@ func (s *UserService) subscriptionExpiry(ctx context.Context, telegramID int64, 
 }
 
 func (s *UserService) RefreshConfig(ctx context.Context, telegramID int64) (model.XUIAccess, error) {
-	client, err := s.clients.GetActiveRecordByTelegramUserID(ctx, telegramID)
+	client, err := s.activeClient(ctx, telegramID)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
 	if s.xui == nil {
 		return model.XUIAccess{}, fmt.Errorf("xui access not configured")
 	}
-
-	expiryAt := s.subscriptionExpiry(ctx, telegramID, client.KeyExpiresAt)
-	if !expiryAt.After(s.now()) {
-		return model.XUIAccess{}, ErrExpired
-	}
-
-	if err := s.xui.RemoveFromPanel(ctx, client); err != nil {
-		return model.XUIAccess{}, err
-	}
-	if err := s.clients.Deactivate(ctx, client.ClientUUID); err != nil && !errors.Is(err, ErrNotFound) {
-		return model.XUIAccess{}, err
-	}
-
-	uid, err := uuid.NewV4()
-	if err != nil {
-		return model.XUIAccess{}, err
-	}
-	tgID := telegramID
-	newClient, err := s.clients.Create(ctx, model.CreateVPNClientParams{
-		ClientUUID:     uid,
-		ServerID:       client.ServerID,
-		TelegramUserID: &tgID,
-		MaxIPs:         client.MaxIPs,
-		KeyExpiresAt:   expiryAt,
-		Note:           client.Note,
-	})
-	if err != nil {
-		return model.XUIAccess{}, err
-	}
-
-	access, err := s.xui.Provision(ctx, newClient.ClientUUID)
-	if err != nil {
-		return model.XUIAccess{}, err
-	}
-
-	_ = s.subs.UpdateActiveClientUUID(ctx, telegramID, newClient.ClientUUID.String(), s.now())
-	_ = s.subs.UpdateActiveEndsAt(ctx, telegramID, newClient.KeyExpiresAt, s.now())
-
-	return access, nil
+	// Re-sync client on 3x-ui and rebuild VLESS from live inbound (same UUID).
+	return s.xui.Provision(ctx, client.ClientUUID)
 }
 
 func telegramNote(p model.UpsertUserParams) string {

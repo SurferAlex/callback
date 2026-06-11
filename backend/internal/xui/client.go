@@ -156,10 +156,29 @@ type streamSettings struct {
 		ServerNames []string `json:"serverNames"`
 		ShortIds    []string `json:"shortIds"`
 		Settings    struct {
-			PublicKey string `json:"publicKey"`
+			PublicKey   string `json:"publicKey"`
+			Fingerprint string `json:"fingerprint"`
+			SpiderX     string `json:"spiderX"`
 		} `json:"settings"`
 		SpiderX string `json:"spiderX"`
 	} `json:"realitySettings"`
+}
+
+// ResolveRealityURIMeta picks fingerprint and spiderX from inbound reality settings when set,
+// otherwise falls back to vpn_servers / env defaults.
+func ResolveRealityURIMeta(ss streamSettings, fpFallback, spiderXFallback string) (fp, spiderX string) {
+	fp = strings.TrimSpace(ss.RealitySettings.Settings.Fingerprint)
+	if fp == "" {
+		fp = strings.TrimSpace(fpFallback)
+	}
+	spiderX = strings.TrimSpace(ss.RealitySettings.SpiderX)
+	if spiderX == "" {
+		spiderX = strings.TrimSpace(ss.RealitySettings.Settings.SpiderX)
+	}
+	if spiderX == "" {
+		spiderX = strings.TrimSpace(spiderXFallback)
+	}
+	return fp, spiderX
 }
 
 type inboundSettings struct {

@@ -3,14 +3,12 @@ package usecase
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"api-vpn/internal/brand"
-	"api-vpn/internal/model"
 )
 
 // SubscriptionFeed is the Happ / V2Ray-compatible subscription payload.
@@ -94,14 +92,7 @@ func (s *UserService) collectSubscriptionURIs(ctx context.Context, telegramID in
 		return nil, fmt.Errorf("xui access not configured")
 	}
 
-	var acc model.XUIAccess
-	if _, err := s.xui.Get(ctx, client.ClientUUID); errors.Is(err, ErrNotFound) {
-		acc, err = s.xui.Provision(ctx, client.ClientUUID)
-	} else if err != nil {
-		return nil, err
-	} else {
-		acc, err = s.xui.RebuildVLESSURI(ctx, client)
-	}
+	acc, err := s.ensureFreshAccess(ctx, client)
 	if err != nil {
 		return nil, err
 	}

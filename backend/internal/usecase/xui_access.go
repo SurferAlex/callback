@@ -102,7 +102,8 @@ func (uc *XUIAccess) Provision(ctx context.Context, clientUUID uuid.UUID) (model
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
-	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), brand.VLESSNodeLabel, ss, sx.fp, sx.spiderX, sx.flow)
+	fp, spiderX := xui.ResolveRealityURIMeta(ss, sx.fp, sx.spiderX)
+	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), brand.VLESSNodeLabel, ss, fp, spiderX, sx.flow)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
@@ -113,6 +114,18 @@ func (uc *XUIAccess) Provision(ctx context.Context, clientUUID uuid.UUID) (model
 		XUIClientEmail: xuiEmail,
 		VLESSURI:       uri,
 	})
+}
+
+// EnsureFreshURI provisions when missing, otherwise rebuilds VLESS from live 3x-ui inbound.
+func (uc *XUIAccess) EnsureFreshURI(ctx context.Context, client model.VPNClient) (model.XUIAccess, error) {
+	_, err := uc.repo.GetByClientUUID(ctx, client.ClientUUID)
+	if errors.Is(err, ErrNotFound) {
+		return uc.Provision(ctx, client.ClientUUID)
+	}
+	if err != nil {
+		return model.XUIAccess{}, err
+	}
+	return uc.RebuildVLESSURI(ctx, client)
 }
 
 // RebuildVLESSURI refreshes the stored VLESS link from live inbound settings and
@@ -147,7 +160,8 @@ func (uc *XUIAccess) RebuildVLESSURI(ctx context.Context, client model.VPNClient
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
-	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), brand.VLESSNodeLabel, ss, sx.fp, sx.spiderX, sx.flow)
+	fp, spiderX := xui.ResolveRealityURIMeta(ss, sx.fp, sx.spiderX)
+	uri, err := xui.BuildVLESSRealityURI(sx.external, inb.Port, client.ClientUUID.String(), brand.VLESSNodeLabel, ss, fp, spiderX, sx.flow)
 	if err != nil {
 		return model.XUIAccess{}, err
 	}
