@@ -9,6 +9,7 @@ import (
 
 	"user-bot/internal/bot"
 	"user-bot/internal/config"
+	"user-bot/internal/notify"
 	"user-bot/vpnapi"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -36,6 +37,19 @@ func main() {
 	api := vpnapi.New(cfg.VPNAPIBaseURL, cfg.VPNAPIInternalToken)
 	sender := &bot.Sender{Bot: tg}
 	router := bot.NewRouter(cfg, api, sender)
+
+	if cfg.NotifyEnabled && cfg.DatabaseURL != "" {
+		pool, err := notify.OpenPool(ctx, cfg.DatabaseURL)
+		if err != nil {
+			log.Printf("[notify] postgres connect failed, scheduler disabled: %v", err)
+		} else {
+			defer pool.Close()
+			worker := notify.NewWorker(notify.NewStore(pool), sender)
+			go notify.StartScheduler(ctx, worker, cfg.NotifyInterval)
+		}
+	} else if cfg.NotifyEnabled && cfg.DatabaseURL == "" {
+		log.Printf("[notify] DATABASE_URL not set, scheduler disabled")
+	}
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 30

@@ -22,6 +22,12 @@ func (s *Sender) SendSticker(chatID int64, stickerID string) {
 	}
 }
 
+func (s *Sender) SendNotification(chatID int64, text string) error {
+	msg := tgbotapi.NewMessage(chatID, text)
+	_, err := s.Bot.Send(msg)
+	return err
+}
+
 func (s *Sender) SendHTML(chatID int64, text string, markup interface{}) {
 	msg := tgbotapi.NewMessage(chatID, text)
 	msg.ParseMode = tgbotapi.ModeHTML

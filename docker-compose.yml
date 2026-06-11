@@ -43,7 +43,10 @@ services:
     env_file:
       - ./user_bot/.env
     depends_on:
-      - vpnapi
+      postgres:
+        condition: service_healthy
+      vpnapi:
+        condition: service_started
     dns:
       - 1.1.1.1
       - 8.8.8.8

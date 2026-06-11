@@ -3,7 +3,9 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Config struct {
@@ -16,6 +18,9 @@ type Config struct {
 	WelcomeStickerID    string
 	SuccessStickerID    string
 	ErrorStickerID      string
+	DatabaseURL         string
+	NotifyEnabled       bool
+	NotifyInterval      time.Duration
 }
 
 func Load() (Config, error) {
@@ -45,5 +50,32 @@ func Load() (Config, error) {
 	if cfg.SupportTelegramURL == "" {
 		cfg.SupportTelegramURL = "https://t.me/surfervpn_support"
 	}
+	cfg.DatabaseURL = strings.TrimSpace(os.Getenv("DATABASE_URL"))
+	cfg.NotifyEnabled = envBoolDefault("NOTIFY_SCHEDULER_ENABLED", true)
+	cfg.NotifyInterval = envDurationDefault("NOTIFY_SCHEDULER_INTERVAL", 30*time.Minute)
 	return cfg, nil
+}
+
+func envBoolDefault(key string, def bool) bool {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return def
+	}
+	b, err := strconv.ParseBool(v)
+	if err != nil {
+		return def
+	}
+	return b
+}
+
+func envDurationDefault(key string, def time.Duration) time.Duration {
+	v := strings.TrimSpace(os.Getenv(key))
+	if v == "" {
+		return def
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil {
+		return def
+	}
+	return d
 }
